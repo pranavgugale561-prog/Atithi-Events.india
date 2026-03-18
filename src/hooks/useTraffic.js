@@ -60,6 +60,7 @@ export function useTraffic() {
           const loc = data.city ? `${data.city}, ${data.country_name}` : 'Unknown Location';
           traffic.lastIp = ip;
           localStorage.setItem('atithi_last_ip', ip);
+          localStorage.setItem('atithi_last_loc', loc);
           traffic.ipHits[ip] = (traffic.ipHits[ip] || 0) + 1;
           localStorage.setItem('atithi_traffic', JSON.stringify(traffic));
           logActivity('visit', `New visitor arrived from ${loc}`, { ip });

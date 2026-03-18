@@ -11,14 +11,16 @@ export async function logActivity(type, detail, metadata = {}) {
     const { collection, addDoc } = await import('firebase/firestore');
     const coll = collection(db, 'activity');
 
-    // Auto-grab IP and Device if not provided
+    // Auto-grab IP, Location, and Device if not provided
     const lastIp = localStorage.getItem('atithi_last_ip') || 'Unknown';
+    const lastLoc = localStorage.getItem('atithi_last_loc') || 'Unknown';
     const ua = navigator.userAgent;
 
     await addDoc(coll, {
       type,
       detail,
       ip: metadata.ip || lastIp,
+      location: metadata.location || lastLoc,
       device: metadata.device || ua,
       ...metadata,
       timestamp: new Date().toISOString(),

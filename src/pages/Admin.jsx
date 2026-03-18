@@ -767,6 +767,11 @@ function ActivityTab({ log, refreshData }) {
                       IP: {entry.ip}
                     </span>
                   )}
+                  {entry.location && entry.location !== 'Unknown Location' && entry.location !== 'Unknown' && (
+                    <span style={{ fontSize: '0.7rem', color: '#fcd34d', background: 'rgba(252,211,77,0.08)', padding: '1px 6px', borderRadius: 4 }}>
+                      📍 {entry.location}
+                    </span>
+                  )}
                   {entry.device && (
                     <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>
                       {entry.device}
