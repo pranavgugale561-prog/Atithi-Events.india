@@ -800,14 +800,16 @@ function ActivityTab({ log, refreshData }) {
 function TimelineTab({ events, refreshData }) {
   const [showForm, setShowForm] = useState(false);
   const [url, setUrl] = useState('');
+  const [draft, setDraft] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleQuickPublish = async () => {
+  const handleFetchDraft = async () => {
     if (!url) {
       alert("Please paste a link first.");
       return;
     }
     setIsProcessing(true);
+    setDraft(null);
     try {
       const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
       const json = await res.json();
@@ -824,45 +826,33 @@ function TimelineTab({ events, refreshData }) {
 
         // 2. Clean Description (Instagram meta stuff and hashtags)
         let cleanDesc = json.data.description || '';
-        
-        // Remove "Likes/Comments - Username on Date:" prefix
         if (cleanDesc.match(/^[0-9,KMBkm]+\s+(likes|views|Play).*?-.*?:\s*/is)) {
           const parts = cleanDesc.split(':');
-          parts.shift(); // remove the prefix
+          parts.shift();
           cleanDesc = parts.join(':').trim();
         } else if (cleanDesc.includes(' on ') && cleanDesc.indexOf(':') > 0 && cleanDesc.indexOf(':') < 100) {
-          // Remove "Username on Date:" prefix
           cleanDesc = cleanDesc.substring(cleanDesc.indexOf(':') + 1).trim();
         }
-        
-        // Remove leading quotes
         cleanDesc = cleanDesc.replace(/^["'\u201C\u2018\u201D\u2019]+/, '').trim();
-        
-        // Remove hashtags (including anything trailing after them since they're usually at the end)
         cleanDesc = cleanDesc.replace(/#[\w\u0590-\u05ff]+/gi, '').replace(/\s+/g, ' ').trim();
-        
-        // Remove trailing dots, spaces, or quotes
         cleanDesc = cleanDesc.replace(/[\.\s"'\u201C\u2018\u201D\u2019]+$/, '').trim();
 
         // 3. Creative Title
         let fetchedTitle = json.data.title || '';
         if (url.includes('instagram.com') || fetchedTitle.toLowerCase().includes('instagram')) {
           let descLine = cleanDesc.split(/[\n.!?]/)[0].trim();
-          
-          // Force a short title logic if the first sentence is huge (e.g. no punctuation)
           if (descLine.length > 50) {
             const subParts = descLine.split(/[,|\-–—:]/);
             if (subParts.length > 1 && subParts[0].length < 65 && subParts[0].length > 5) {
               descLine = subParts[0].trim();
             } else if (descLine.length > 60) {
-              // Truncate cleanly at the last full word before 60 chars
               descLine = descLine.substring(0, 60).replace(/\s+\S*$/, '') + '...';
             }
           }
           fetchedTitle = descLine || 'Timeline Memory';
         }
         
-        // 4. Assemble and Push
+        // 4. Assemble Draft
         const newEvent = {
           url: url,
           title: fetchedTitle,
@@ -873,21 +863,32 @@ function TimelineTab({ events, refreshData }) {
 
         if (!newEvent.thumbnail) {
           alert('Could not auto-fetch a thumbnail image from this link. Make sure it is public.');
-          setIsProcessing(false);
-          return;
+        } else {
+          setDraft(newEvent);
         }
-
-        await addTimelineEvent(newEvent);
-        try { trackEvent('timeline_saved', { title: newEvent.title }); } catch (e) {}
-
-        setUrl('');
-        setShowForm(false);
-        await refreshData();
       } else {
         alert("Couldn't auto-fetch details. The link might be private or blocked by Instagram.");
       }
     } catch (e) {
       alert("Failed to process link.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!draft || !draft.title) return;
+    setIsProcessing(true);
+    try {
+      await addTimelineEvent(draft);
+      try { trackEvent('timeline_saved', { title: draft.title }); } catch (e) {}
+
+      setUrl('');
+      setDraft(null);
+      setShowForm(false);
+      await refreshData();
+    } catch (e) {
+      alert("Failed to publish to timeline.");
     } finally {
       setIsProcessing(false);
     }
@@ -900,6 +901,12 @@ function TimelineTab({ events, refreshData }) {
     }
   };
 
+  const resetForm = () => {
+    setUrl('');
+    setDraft(null);
+    setShowForm(!showForm);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header */}
@@ -908,7 +915,7 @@ function TimelineTab({ events, refreshData }) {
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', margin: 0 }}>Timeline Events</h2>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>{events.length} timeline memories.</p>
         </div>
-        <button onClick={() => { setUrl(''); setShowForm(!showForm); }} style={{
+        <button onClick={resetForm} style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8,
           background: showForm ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #d4af37, #ffd700)',
           color: showForm ? '#fff' : '#000', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', border: 'none',
@@ -918,31 +925,61 @@ function TimelineTab({ events, refreshData }) {
         </button>
       </div>
 
-      {/* 1-Click Editor Form */}
+      {/* Editor Form */}
       <AnimatePresence>
         {showForm && (
           <motion.div
             initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             style={{ overflow: 'hidden', background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', padding: 24, marginBottom: 12 }}
           >
-            <h3 style={{ marginTop: 0, marginBottom: 16, fontSize: '1rem', color: '#d4af37' }}>Quick Add Timeline Item</h3>
-            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>Just paste the public URL. We'll automatically identify the best title from the caption, extract the picture, and publish it.</p>
+            <h3 style={{ marginTop: 0, marginBottom: 16, fontSize: '1rem', color: '#d4af37' }}>Add Timeline Item</h3>
+            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>Paste a public URL to fetch ideas for the Title and Description. You can edit them before publishing.</p>
             
-            <div>
-              <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Link URL (Instagram/YouTube/Facebook)</label>
-              <input className="input-luxury" placeholder="https://instagram.com/p/..." value={url} onChange={e => setUrl(e.target.value)} disabled={isProcessing} autoFocus />
-            </div>
-            
-            <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-              <button onClick={handleQuickPublish} disabled={isProcessing || !url} style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10,
-                background: (!url) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #d4af37, #ffd700)',
-                color: (!url) ? 'rgba(255,255,255,0.3)' : '#000', 
-                fontWeight: 700, fontSize: '0.85rem', cursor: (!url || isProcessing) ? 'not-allowed' : 'pointer', border: 'none',
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: draft ? 24 : 0 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Link URL (Instagram/YouTube/Facebook)</label>
+                <input className="input-luxury" placeholder="https://instagram.com/p/..." value={url} onChange={e => { setUrl(e.target.value); setDraft(null); }} disabled={isProcessing} autoFocus />
+              </div>
+              <button type="button" onClick={handleFetchDraft} disabled={isProcessing || !url || draft !== null} style={{
+                height: 42, padding: '0 20px', borderRadius: 8, background: 'rgba(255,255,255,0.1)', color: '#fff', 
+                border: '1px solid rgba(255,255,255,0.2)', cursor: (isProcessing || !url || draft !== null) ? 'not-allowed' : 'pointer', fontSize: '0.8rem', fontWeight: 600
               }}>
-                <Save size={15} /> {isProcessing ? 'Extracting & Publishing...' : 'Publish to Timeline'}
+                {isProcessing && !draft ? 'Fetching...' : 'Fetch Details'}
               </button>
             </div>
+
+            {draft && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, paddingTop: 16, borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: '#d4af37', display: 'block', marginBottom: 6 }}>Suggested Title</label>
+                  <input className="input-luxury" value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: '#d4af37', display: 'block', marginBottom: 6 }}>Display Date</label>
+                  <input className="input-luxury" value={draft.date} onChange={e => setDraft({ ...draft, date: e.target.value })} />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ fontSize: '0.75rem', color: '#d4af37', display: 'block', marginBottom: 6 }}>Suggested Description</label>
+                  <textarea className="input-luxury" rows={3} value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} style={{ resize: 'vertical' }} />
+                </div>
+                
+                <div style={{ gridColumn: 'span 2', display: 'flex', gap: 16, alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 12 }}>
+                  <img src={draft.thumbnail} alt="Thumbnail preview" style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} />
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#fff', fontWeight: 600 }}>Thumbnail Extracted</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>Looks good to go!</p>
+                  </div>
+                  <button onClick={handlePublish} disabled={isProcessing || !draft.title} style={{
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '10px 24px', borderRadius: 8,
+                    background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', 
+                    fontWeight: 700, fontSize: '0.85rem', cursor: isProcessing ? 'not-allowed' : 'pointer', border: 'none'
+                  }}>
+                    <Save size={15} /> Publish
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
           </motion.div>
         )}
       </AnimatePresence>
