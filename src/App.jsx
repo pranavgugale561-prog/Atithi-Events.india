@@ -25,6 +25,7 @@ import Photography from './pages/Photography';
 import WhySocialMedia from './pages/WhySocialMedia';
 import EventClasses from './pages/EventClasses';
 import CateringPRO from './pages/CateringPRO';
+import AboutContact from './pages/AboutContact';
 
 function AppRoutes() {
   const location = useLocation();
@@ -55,6 +56,7 @@ function AppRoutes() {
         <Route path="/why-social-media" element={<WhySocialMedia />} />
         <Route path="/classes" element={<EventClasses />} />
         <Route path="/catering-pro" element={<CateringPRO />} />
+        <Route path="/contact" element={<AboutContact />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>

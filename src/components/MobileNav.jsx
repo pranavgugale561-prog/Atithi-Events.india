@@ -15,6 +15,7 @@ export default function MobileNav() {
     { icon: Sparkles, label: 'PRO Girls', path: '/catering-pro' },
     { icon: ShoppingCart, label: 'Cart', action: 'cart', badge: cart.length },
     { icon: Palette, label: 'Vibe', path: '/#mood-board' },
+    { icon: Phone, label: 'Contact', path: '/contact' },
   ];
 
   const handleClick = (item) => {
