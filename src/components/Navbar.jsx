@@ -26,6 +26,12 @@ export default function Navbar() {
   const location = useLocation();
   const moreRef = useRef(null);
 
+  // Close all menus when route changes
+  useEffect(() => {
+    setMenuOpen(false);
+    setMoreOpen(false);
+  }, [location.pathname, location.hash]);
+
   // Close "More" dropdown when clicking outside
   useEffect(() => {
     const handleClick = (e) => {
@@ -38,12 +44,16 @@ export default function Navbar() {
   }, []);
 
   const handleNavClick = (to) => {
-    setMenuOpen(false);
-    setMoreOpen(false);
     if (to.startsWith('/#') && location.pathname === '/') {
       const id = to.replace('/#', '');
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        setMenuOpen(false);
+        setMoreOpen(false);
+      }
     }
+    // Standard links will be handled by Link + useEffect route change listener
   };
 
   const isActive = (to) => location.pathname === to;
@@ -86,7 +96,12 @@ export default function Navbar() {
             <Link
               key={link.to}
               to={link.to}
-              onClick={() => handleNavClick(link.to)}
+              onClick={(e) => {
+                if (link.to.startsWith('/#') && location.pathname === '/') {
+                  e.preventDefault();
+                  handleNavClick(link.to);
+                }
+              }}
               className="nav-link"
               style={{
                 color: isActive(link.to) ? 'var(--accent-gold)' : 'var(--text-secondary)',
@@ -139,7 +154,12 @@ export default function Navbar() {
                     <Link
                       key={link.to}
                       to={link.to}
-                      onClick={() => handleNavClick(link.to)}
+                      onClick={(e) => {
+                        if (link.to.startsWith('/#') && location.pathname === '/') {
+                          e.preventDefault();
+                          handleNavClick(link.to);
+                        }
+                      }}
                       style={{
                         display: 'block',
                         padding: '9px 14px',
@@ -211,7 +231,12 @@ export default function Navbar() {
               <Link
                 key={link.to}
                 to={link.to}
-                onClick={() => handleNavClick(link.to)}
+                onClick={(e) => {
+                  if (link.to.startsWith('/#') && location.pathname === '/') {
+                    e.preventDefault();
+                    handleNavClick(link.to);
+                  }
+                }}
                 style={{
                   display: 'block',
                   padding: '11px 12px',
