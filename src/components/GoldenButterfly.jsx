@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
+import GlowFlower from './GlowFlower';
 
 const BUTTERFLY_SVG = (
   <svg viewBox="0 0 100 100" width="30" height="30">
@@ -33,6 +34,7 @@ const BUTTERFLY_SVG = (
 );
 
 export default function GoldenButterfly() {
+  const [flowers, setFlowers] = useState([]);
   const posRef = useRef({ x: -100, y: -100 });
   const [isSitting, setIsSitting] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -48,6 +50,20 @@ export default function GoldenButterfly() {
       forceTakeoffRef.current = true;
     }
   }, [location.pathname]);
+
+  const spawnFlower = () => {
+    // Take off point: Viewport current posRef -> Page absolute
+    const newFlower = {
+      id: Date.now() + Math.random(),
+      x: posRef.current.x,
+      y: posRef.current.y + window.scrollY,
+    };
+    setFlowers(prev => [...prev.slice(-40), newFlower]); // Keep max 40 in DOM
+  };
+
+  const removeFlower = (id) => {
+    setFlowers(prev => prev.filter(f => f.id !== id));
+  };
 
   useEffect(() => {
     mountedRef.current = true;
@@ -74,6 +90,10 @@ export default function GoldenButterfly() {
     };
 
     const flyTo = async (targetRect) => {
+      // Plant a flower upon takeoff if she was sitting
+      if (isSitting) {
+        spawnFlower();
+      }
       setIsSitting(false);
       forceTakeoffRef.current = false;
       
@@ -174,83 +194,92 @@ export default function GoldenButterfly() {
   }, []);
 
   return (
-    <motion.div
-      animate={controls}
-      initial={{ x: -100, y: -100 }}
-      style={{
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        zIndex: 99999,
-        pointerEvents: 'none',
-        filter: 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.8))',
-      }}
-    >
+    <>
+      {/* Flower Layer (Page relative) */}
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', pointerEvents: 'none', zIndex: 9998 }}>
+        {flowers.map(f => (
+          <GlowFlower key={f.id} x={f.x} y={f.y} onComplete={() => removeFlower(f.id)} />
+        ))}
+      </div>
+
       <motion.div
-        animate={{ 
-          rotate: rotation,
-          scale: isSitting ? 0.8 : 1.2,
-          y: isSitting ? 0 : [0, -10, 0]
-        }}
-        transition={{
-          y: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+        animate={controls}
+        initial={{ x: -100, y: -100 }}
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          zIndex: 99999,
+          pointerEvents: 'none',
+          filter: 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.8))',
         }}
       >
-        {/* Butterfly Wings with faster flapping when flying */}
-        <div style={{ transform: `scale(${isSitting ? 0.7 : 1})` }}>
-          <svg viewBox="0 0 100 100" width="40" height="40" style={{ overflow: 'visible' }}>
-            <defs>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-              <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fff7ad" />
-                <stop offset="50%" stopColor="#d4af37" />
-                <stop offset="100%" stopColor="#8a6d1e" />
-              </linearGradient>
-            </defs>
-            
-            {/* Left Wing */}
-            <motion.path
-              d="M50 50 C20 10 5 30 5 50 C5 70 20 90 50 60"
-              fill="url(#goldGrad)"
-              animate={{ 
-                rotateY: isSitting ? [0, 45, 0] : [0, 75, 0],
-              }}
-              transition={{ 
-                duration: isSitting ? 0.8 : 0.15, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              }}
-              style={{ originX: "50px" }}
-            />
-            
-            {/* Right Wing */}
-            <motion.path
-              d="M50 50 C80 10 95 30 95 50 C95 70 80 90 50 60"
-              fill="url(#goldGrad)"
-              animate={{ 
-                rotateY: isSitting ? [0, -45, 0] : [0, -75, 0],
-              }}
-              transition={{ 
-                duration: isSitting ? 0.8 : 0.15, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              }}
-              style={{ originX: "50px" }}
-            />
-            
-            {/* Body */}
-            <ellipse cx="50" cy="52" rx="2" ry="10" fill="#4a3710" filter="url(#glow)" />
-            {/* Antennae */}
-            <path d="M48 42 Q45 35 40 32" fill="none" stroke="#d4af37" strokeWidth="0.5" />
-            <path d="M52 42 Q55 35 60 32" fill="none" stroke="#d4af37" strokeWidth="0.5" />
-          </svg>
-        </div>
+        <motion.div
+          animate={{ 
+            rotate: rotation,
+            scale: isSitting ? 0.8 : 1.2,
+            y: isSitting ? 0 : [0, -10, 0]
+          }}
+          transition={{
+            y: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+          }}
+        >
+          {/* Butterfly Wings with faster flapping when flying */}
+          <div style={{ transform: `scale(${isSitting ? 0.7 : 1})` }}>
+            <svg viewBox="0 0 100 100" width="40" height="40" style={{ overflow: 'visible' }}>
+              <defs>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fff7ad" />
+                  <stop offset="50%" stopColor="#d4af37" />
+                  <stop offset="100%" stopColor="#8a6d1e" />
+                </linearGradient>
+              </defs>
+              
+              {/* Left Wing */}
+              <motion.path
+                d="M50 50 C20 10 5 30 5 50 C5 70 20 90 50 60"
+                fill="url(#goldGrad)"
+                animate={{ 
+                  rotateY: isSitting ? [0, 45, 0] : [0, 75, 0],
+                }}
+                transition={{ 
+                  duration: isSitting ? 0.8 : 0.15, 
+                  repeat: Infinity, 
+                  ease: "easeInOut" 
+                }}
+                style={{ originX: "50px" }}
+              />
+              
+              {/* Right Wing */}
+              <motion.path
+                d="M50 50 C80 10 95 30 95 50 C95 70 80 90 50 60"
+                fill="url(#goldGrad)"
+                animate={{ 
+                  rotateY: isSitting ? [0, -45, 0] : [0, -75, 0],
+                }}
+                transition={{ 
+                  duration: isSitting ? 0.8 : 0.15, 
+                  repeat: Infinity, 
+                  ease: "easeInOut" 
+                }}
+                style={{ originX: "50px" }}
+              />
+              
+              {/* Body */}
+              <ellipse cx="50" cy="52" rx="2" ry="10" fill="#4a3710" filter="url(#glow)" />
+              {/* Antennae */}
+              <path d="M48 42 Q45 35 40 32" fill="none" stroke="#d4af37" strokeWidth="0.5" />
+              <path d="M52 42 Q55 35 60 32" fill="none" stroke="#d4af37" strokeWidth="0.5" />
+            </svg>
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </>
   );
 }
