@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Home, Briefcase, Palette, Clock, ShoppingCart, Sparkles } from 'lucide-react';
 import { useCart } from './CartContext';
 
@@ -39,12 +40,13 @@ export default function MobileNav() {
   };
 
   return (
-    <nav className="mobile-nav">
+    <nav className="mobile-nav" style={{ zIndex: 2000 }}>
       {items.map(item => (
-        <button
+        <motion.button
           key={item.label}
           className={`mobile-nav-item ${isActive(item.path) ? 'active' : ''}`}
           onClick={() => handleClick(item)}
+          whileTap={{ scale: 0.9, backgroundColor: 'rgba(212,175,55,0.1)' }}
           style={{ position: 'relative' }}
         >
           <item.icon size={18} />
@@ -69,7 +71,7 @@ export default function MobileNav() {
               {item.badge}
             </span>
           )}
-        </button>
+        </motion.button>
       ))}
     </nav>
   );

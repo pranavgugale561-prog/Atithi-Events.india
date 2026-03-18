@@ -6,11 +6,13 @@ export default function CustomCursor() {
   const [isHovering, setIsHovering] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
 
+  const [isTouch, setIsTouch] = useState(false);
   const springConfig = { damping: 25, stiffness: 200 };
   const cursorX = useSpring(0, springConfig);
   const cursorY = useSpring(0, springConfig);
 
   useEffect(() => {
+    setIsTouch(window.matchMedia('(pointer: coarse)').matches);
     const handleMouseMove = (e) => {
       setMousePos({ x: e.clientX, y: e.clientY });
       cursorX.set(e.clientX);
@@ -44,6 +46,8 @@ export default function CustomCursor() {
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [cursorX, cursorY]);
+
+  if (isTouch) return null;
 
   return (
     <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 999999 }}>
