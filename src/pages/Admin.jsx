@@ -847,7 +847,18 @@ function TimelineTab({ events, refreshData }) {
         // 3. Creative Title
         let fetchedTitle = json.data.title || '';
         if (url.includes('instagram.com') || fetchedTitle.toLowerCase().includes('instagram')) {
-          const descLine = cleanDesc.split(/[.!?\n]/)[0].trim();
+          let descLine = cleanDesc.split(/[\n.!?]/)[0].trim();
+          
+          // Force a short title logic if the first sentence is huge (e.g. no punctuation)
+          if (descLine.length > 50) {
+            const subParts = descLine.split(/[,|\-–—:]/);
+            if (subParts.length > 1 && subParts[0].length < 65 && subParts[0].length > 5) {
+              descLine = subParts[0].trim();
+            } else if (descLine.length > 60) {
+              // Truncate cleanly at the last full word before 60 chars
+              descLine = descLine.substring(0, 60).replace(/\s+\S*$/, '') + '...';
+            }
+          }
           fetchedTitle = descLine || 'Timeline Memory';
         }
         
