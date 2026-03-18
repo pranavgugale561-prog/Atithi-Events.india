@@ -799,21 +799,20 @@ function ActivityTab({ log, refreshData }) {
 // ─── Timeline Tab ─────────────────────────────────
 function TimelineTab({ events, refreshData }) {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', date: '', url: '', description: '', thumbnail: '' });
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const [url, setUrl] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleAutoFill = async () => {
-    if (!form.url) {
+  const handleQuickPublish = async () => {
+    if (!url) {
       alert("Please paste a link first.");
       return;
     }
-    setIsFetching(true);
+    setIsProcessing(true);
     try {
-      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(form.url)}`);
+      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
       const json = await res.json();
       if (json.status === 'success' && json.data) {
-        // Parse date from microlink or fallback to today
+        // 1. Date
         let fetchedDate = json.data.date;
         let formattedDate = '';
         if (fetchedDate) {
@@ -823,39 +822,42 @@ function TimelineTab({ events, refreshData }) {
           formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
+        // 2. Creative Title
         let fetchedTitle = json.data.title || '';
-        // If Instagram gives a generic title, clear it so the user can type a proper one like 'Dhokariya Family Wedding'
         if (fetchedTitle.toLowerCase().includes('instagram photo by') || fetchedTitle.toLowerCase().includes('instagram video by') || fetchedTitle === 'Instagram') {
-          fetchedTitle = '';
+          const descLine = (json.data.description || '').split(/[.!?\n]/)[0].trim();
+          fetchedTitle = descLine || 'Timeline Memory';
+        }
+        
+        // 3. Assemble and Push
+        const newEvent = {
+          url: url,
+          title: fetchedTitle,
+          description: json.data.description || '',
+          thumbnail: (json.data.image && json.data.image.url) || '',
+          date: formattedDate
+        };
+
+        if (!newEvent.thumbnail) {
+          alert('Could not auto-fetch a thumbnail image from this link. Make sure it is public.');
+          setIsProcessing(false);
+          return;
         }
 
-        setForm(prev => ({
-          ...prev,
-          title: prev.title || fetchedTitle,
-          description: prev.description || json.data.description || '',
-          thumbnail: prev.thumbnail || (json.data.image && json.data.image.url) || '',
-          date: prev.date || formattedDate,
-        }));
+        await addTimelineEvent(newEvent);
+        try { trackEvent('timeline_saved', { title: newEvent.title }); } catch (e) {}
+
+        setUrl('');
+        setShowForm(false);
+        await refreshData();
       } else {
-        alert("Couldn't auto-fetch details. The link might be private.");
+        alert("Couldn't auto-fetch details. The link might be private or blocked by Instagram.");
       }
     } catch (e) {
-      alert("Failed to fetch link details.");
+      alert("Failed to process link.");
     } finally {
-      setIsFetching(false);
+      setIsProcessing(false);
     }
-  };
-
-  const handleSave = async () => {
-    if (!form.title || !form.thumbnail || !form.url) return;
-    await addTimelineEvent(form);
-    
-    // Attempt tracking but don't blow up if it fails
-    try { trackEvent('timeline_saved', { title: form.title }); } catch (e) {}
-
-    setForm({ title: '', date: '', url: '', description: '', thumbnail: '' });
-    setShowForm(false);
-    await refreshData();
   };
 
   const handleDelete = async (id) => {
@@ -865,29 +867,15 @@ function TimelineTab({ events, refreshData }) {
     }
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setIsCompressing(true);
-    try {
-      const base64 = await imageToCompressedBase64(file);
-      setForm(prev => ({ ...prev, thumbnail: base64 }));
-    } catch (err) {
-      alert('Failed to process image');
-    } finally {
-      setIsCompressing(false);
-    }
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', margin: 0 }}>Timeline Events</h2>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>{events.length} timeline memory items.</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>{events.length} timeline memories.</p>
         </div>
-        <button onClick={() => { setForm({ title: '', date: '', url: '', description: '', thumbnail: '' }); setShowForm(!showForm); }} style={{
+        <button onClick={() => { setUrl(''); setShowForm(!showForm); }} style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8,
           background: showForm ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #d4af37, #ffd700)',
           color: showForm ? '#fff' : '#000', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', border: 'none',
@@ -897,70 +885,29 @@ function TimelineTab({ events, refreshData }) {
         </button>
       </div>
 
-      {/* Editor Form */}
+      {/* 1-Click Editor Form */}
       <AnimatePresence>
         {showForm && (
           <motion.div
             initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             style={{ overflow: 'hidden', background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', padding: 24, marginBottom: 12 }}
           >
-            <h3 style={{ marginTop: 0, marginBottom: 16, fontSize: '1rem', color: '#d4af37' }}>Add Timeline Item</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div>
-                <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Title</label>
-                <input className="input-luxury" placeholder="e.g. Dhokariya Family Wedding" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Display Date</label>
-                <input className="input-luxury" placeholder="e.g. Mar 16, 2026" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block' }}>Link URL (Instagram/YouTube/Facebook)</label>
-                  <button type="button" onClick={handleAutoFill} disabled={isFetching || !form.url} style={{
-                    fontSize: '0.7rem', color: '#d4af37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', 
-                    borderRadius: 6, padding: '4px 8px', cursor: (isFetching || !form.url) ? 'not-allowed' : 'pointer'
-                  }}>
-                    {isFetching ? 'Fetching...' : '✨ Auto Fill Details'}
-                  </button>
-                </div>
-                <input className="input-luxury" placeholder="https://instagram.com/p/..." value={form.url} onChange={e => setForm({ ...form, url: e.target.value })} />
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Description</label>
-                <textarea className="input-luxury" rows={3} placeholder="Tell the story behind this event..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ resize: 'vertical' }} />
-              </div>
-              {/* Photo Upload */}
-              <div style={{ gridColumn: 'span 2', background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
-                <label style={{ fontSize: '0.8rem', color: '#d4af37', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <Camera size={15} /> Thumbnail Photo
-                </label>
-                <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                  {form.thumbnail ? (
-                    <div style={{ position: 'relative', width: 96, height: 96, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <img src={form.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button onClick={() => setForm(prev => ({ ...prev, thumbnail: '' }))} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.7)', border: 'none', color: '#fff', borderRadius: '50%', padding: 4, cursor: 'pointer', display: 'flex' }}>
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={{ flex: 1 }}>
-                      <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isCompressing} style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }} />
-                      {isCompressing && <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: 8, display: 'block' }}>Compressing image…</span>}
-                      <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>Upload a single cover photo for this memory.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+            <h3 style={{ marginTop: 0, marginBottom: 16, fontSize: '1rem', color: '#d4af37' }}>Quick Add Timeline Item</h3>
+            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>Just paste the public URL. We'll automatically identify the best title from the caption, extract the picture, and publish it.</p>
+            
+            <div>
+              <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Link URL (Instagram/YouTube/Facebook)</label>
+              <input className="input-luxury" placeholder="https://instagram.com/p/..." value={url} onChange={e => setUrl(e.target.value)} disabled={isProcessing} autoFocus />
             </div>
+            
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-              <button onClick={handleSave} disabled={isCompressing || !form.title || !form.thumbnail || !form.url || !form.date} style={{
+              <button onClick={handleQuickPublish} disabled={isProcessing || !url} style={{
                 display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10,
-                background: (!form.title || !form.thumbnail || !form.url || !form.date) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #d4af37, #ffd700)',
-                color: (!form.title || !form.thumbnail || !form.url || !form.date) ? 'rgba(255,255,255,0.3)' : '#000', 
-                fontWeight: 700, fontSize: '0.85rem', cursor: (!form.title || !form.thumbnail || !form.url || !form.date) ? 'not-allowed' : 'pointer', border: 'none',
+                background: (!url) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #d4af37, #ffd700)',
+                color: (!url) ? 'rgba(255,255,255,0.3)' : '#000', 
+                fontWeight: 700, fontSize: '0.85rem', cursor: (!url || isProcessing) ? 'not-allowed' : 'pointer', border: 'none',
               }}>
-                <Save size={15} /> Publish to Timeline
+                <Save size={15} /> {isProcessing ? 'Extracting & Publishing...' : 'Publish to Timeline'}
               </button>
             </div>
           </motion.div>
