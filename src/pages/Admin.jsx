@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -6,10 +6,11 @@ import {
   Plus, Pencil, Trash2, Save, X, Eye, Clock, TrendingUp, Activity,
   Hotel, Truck, Instagram, Palette, ChefHat, Camera, Music, MapPin,
   Star, Gem, Flower2, PartyPopper, Gift, ImagePlus, Phone, Mail,
-  Calendar, Wifi, Globe, Shield, CheckCircle, AlertCircle, Zap, MessageSquare
+  Calendar, Wifi, Globe, Shield, CheckCircle, AlertCircle, Zap, MessageSquare,
+  RefreshCw
 } from 'lucide-react';
 import { getServices, addService, updateService, deleteService, getLeads, deleteLead, imageToCompressedBase64 } from '../utils/services';
-import { getActivityLog, clearActivityLog } from '../utils/activityLog';
+import { getActivityLog, clearActivityLog, logActivity } from '../utils/activityLog';
 import { getTrafficData } from '../hooks/useTraffic';
 import { trackEvent } from '../firebase';
 
@@ -604,17 +605,32 @@ function ActivityTab({ log, refreshData }) {
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', margin: 0 }}>Activity Log</h2>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>{log.length} events recorded.</p>
         </div>
-        <button
-          onClick={handleClear}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px', borderRadius: 8,
-            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
-            color: '#f87171', fontSize: '0.8rem', cursor: 'pointer',
-          }}
-        >
-          <Trash2 size={14} /> Clear All
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={async () => {
+              await logActivity('visit', 'Admin connection test', { ip: 'Admin Console', device: navigator.userAgent });
+              await refreshData();
+            }}
+            style={{
+              padding: '8px 14px', borderRadius: 8,
+              background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)',
+              color: '#d4af37', fontSize: '0.8rem', cursor: 'pointer',
+            }}
+          >
+            Send Test
+          </button>
+          <button
+            onClick={handleClear}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '8px 14px', borderRadius: 8,
+              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+              color: '#f87171', fontSize: '0.8rem', cursor: 'pointer',
+            }}
+          >
+            <Trash2 size={14} /> Clear All
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

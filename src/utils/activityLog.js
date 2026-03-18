@@ -40,13 +40,26 @@ export async function getActivityLog() {
     const coll = collection(db, 'activity');
     const q = query(coll, orderBy('timestamp', 'desc'), limit(100));
     
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (indexError) {
+      console.warn('[ActivityLog] Sorted fetch failed, falling back to unsorted:', indexError.message);
+      // Fallback: Fetch without sorting (might require manual sort in JS)
+      const fallbackQ = query(coll, limit(100));
+      const snapshot = await getDocs(fallbackQ);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      // Sort manually in memory as a last resort
+      return data.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+    }
   } catch (e) {
-    console.error('[ActivityLog] Fetch failed:', e);
+    console.error('[ActivityLog] Critical fetch failure:', e);
     return [];
   }
 }
