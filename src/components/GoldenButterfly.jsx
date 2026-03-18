@@ -32,7 +32,7 @@ const BUTTERFLY_SVG = (
 );
 
 export default function GoldenButterfly() {
-  const [position, setPosition] = useState({ x: -100, y: -100 });
+  const posRef = useRef({ x: -100, y: -100 });
   const [isSitting, setIsSitting] = useState(false);
   const [rotation, setRotation] = useState(0);
   const controls = useAnimation();
@@ -66,8 +66,8 @@ export default function GoldenButterfly() {
     const flyTo = async (targetRect) => {
       setIsSitting(false);
       
-      const startX = position.x;
-      const startY = position.y;
+      const startX = posRef.current.x;
+      const startY = posRef.current.y;
       
       // Calculate a "random" path point for organic feel
       const midX = (startX + targetRect.left) / 2 + (Math.random() - 0.5) * 200;
@@ -88,7 +88,7 @@ export default function GoldenButterfly() {
       });
 
       setIsSitting(true);
-      setPosition({ x: targetRect.left + targetRect.width / 2, y: targetRect.top });
+      posRef.current = { x: targetRect.left + targetRect.width / 2, y: targetRect.top };
       // Gentle flutter when sitting
       setRotation(Math.random() * 360);
     };
@@ -96,6 +96,11 @@ export default function GoldenButterfly() {
     const cycle = async () => {
       // Small delay initially
       await new Promise(r => setTimeout(r, 2000));
+      
+      // Attempt to start butterfly at a visible entry point instead of deep offscreen if this is the first real movement
+      if (posRef.current.x === -100) {
+        posRef.current = { x: window.innerWidth / 2, y: -50 };
+      }
       
       while (mountedRef.current) {
         const target = findNewTarget();
@@ -116,8 +121,8 @@ export default function GoldenButterfly() {
             // Add scrollY so it stays relative to what user is looking at
             const targetY = (Math.random() * (window.innerHeight - padding * 2)) + padding + window.scrollY;
 
-            const startX = position.x;
-            const startY = position.y;
+            const startX = posRef.current.x;
+            const startY = posRef.current.y;
             
             const midX = (startX + targetX) / 2 + (Math.random() - 0.5) * 200;
             const midY = (startY + targetY) / 2 - 100;
@@ -131,7 +136,7 @@ export default function GoldenButterfly() {
               transition: { duration: 4 + Math.random() * 2, ease: "easeInOut" }
             });
 
-            setPosition({ x: targetX, y: targetY });
+            posRef.current = { x: targetX, y: targetY };
             
             // Rest mid-air or hover
             setIsSitting(Math.random() > 0.5);
