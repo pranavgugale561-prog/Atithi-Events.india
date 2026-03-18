@@ -1,16 +1,15 @@
 // ─── Firebase Configuration ────────────────────────────────────────────────
-// Replace these placeholder values with your actual Firebase project config.
-// Get them from: Firebase Console → Project Settings → Your apps → Web app → SDK setup
+// Real credentials provided by the user.
 // ──────────────────────────────────────────────────────────────────────────────
 
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID",
-  measurementId: "REPLACE_WITH_YOUR_MEASUREMENT_ID"
+  apiKey: "AIzaSyADTgZtNIctiOIbrk7yJU6CQ_hiQozNau4",
+  authDomain: "atithieventswebsite.firebaseapp.com",
+  projectId: "atithieventswebsite",
+  storageBucket: "atithieventswebsite.firebasestorage.app",
+  messagingSenderId: "477796251482",
+  appId: "1:477796251482:web:7de53a5a798f9a333ce563",
+  measurementId: "G-RHRTWER6Q0"
 };
 
 // Check if config is still placeholder
