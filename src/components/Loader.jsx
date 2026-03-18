@@ -99,29 +99,40 @@ export default function Loader({ onComplete }) {
     }
     setHasShown(true);
 
-    const totalDuration = 6000; // 6s total
     const progressDuration = 5400; // Progress bar takes 5.4s
     const startTime = performance.now();
+    let animationFrame;
+
+    const finish = () => {
+      cancelAnimationFrame(animationFrame);
+      setIsVisible(false);
+      sessionStorage.setItem('atithi_loaded', 'true');
+      onComplete?.();
+    };
+
+    // Hard safety timeout — if rAF ever stalls, site still appears after 8s
+    const safetyTimeout = setTimeout(finish, 8000);
 
     const updateProgress = (currentTime) => {
       const elapsed = currentTime - startTime;
       const newProgress = Math.min((elapsed / progressDuration) * 100, 100);
-      
       setProgress(newProgress);
 
       if (elapsed < progressDuration) {
-        requestAnimationFrame(updateProgress);
+        animationFrame = requestAnimationFrame(updateProgress);
       } else {
         setTimeout(() => {
-          setIsVisible(false);
-          sessionStorage.setItem('atithi_loaded', 'true');
-          onComplete?.();
-        }, 600); // 0.6s exit delay
+          clearTimeout(safetyTimeout);
+          finish();
+        }, 600);
       }
     };
 
-    const animationFrame = requestAnimationFrame(updateProgress);
-    return () => cancelAnimationFrame(animationFrame);
+    animationFrame = requestAnimationFrame(updateProgress);
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      clearTimeout(safetyTimeout);
+    };
   }, [onComplete]);
 
   // Cycle taglines
