@@ -63,10 +63,10 @@ export default function RSVP() {
   const [photos, setPhotos] = useState([]);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email) return;
-    addRSVP(form);
+    await addRSVP(form);
     setSubmitted(true);
   };
 

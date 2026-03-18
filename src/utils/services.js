@@ -1,6 +1,9 @@
 import { logActivity } from './activityLog';
+import { getDB } from '../firebase';
 
-const SERVICES_VERSION = 'v5';
+// Since we are migrating to Firestore, we don't need these anymore
+// const STORAGE_KEY = 'atithi_services';
+// const VERSION_KEY = 'atithi_services_version';
 
 const DEFAULT_SERVICES = [
   // ── Digital Services ──
@@ -78,91 +81,150 @@ const DEFAULT_SERVICES = [
   { id: 'fo9', title: 'Popcorn & Nostalgia Counter', description: 'Live popcorn popping machines alongside a counter filled with 90s nostalgia candies.', icon: 'star', category: 'Live Outlets', span: '', images: [] },
 ];
 
-const STORAGE_KEY = 'atithi_services';
-const VERSION_KEY = 'atithi_services_version';
+/**
+ * ─── Database Helpers ────────────────────────────────────────────────────────
+ */
 
-export function getServices() {
-  const storedVersion = localStorage.getItem(VERSION_KEY);
-  if (storedVersion === SERVICES_VERSION) {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-  }
-  // Version mismatch or first load — reset to defaults
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SERVICES));
-  localStorage.setItem(VERSION_KEY, SERVICES_VERSION);
-  return DEFAULT_SERVICES;
+async function getDocRef(collectionName, id) {
+  const db = await getDB();
+  if (!db) return null;
+  const { doc } = await import('firebase/firestore');
+  return doc(db, collectionName, id);
 }
 
-export function addService(service) {
-  const services = getServices();
-  const newService = { ...service, id: Date.now().toString(36) };
-  services.push(newService);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
-  logActivity('service_add', `Added service: ${service.title}`);
-  return newService;
-}
-
-export function updateService(id, updates) {
-  const services = getServices();
-  const idx = services.findIndex(s => s.id === id);
-  if (idx === -1) return null;
-  services[idx] = { ...services[idx], ...updates };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
-  logActivity('service_update', `Updated service: ${services[idx].title}`);
-  return services[idx];
-}
-
-export function deleteService(id) {
-  const services = getServices();
-  const service = services.find(s => s.id === id);
-  const filtered = services.filter(s => s.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-  if (service) logActivity('service_delete', `Deleted service: ${service.title}`);
-}
-
-export function getLeads() {
-  return JSON.parse(localStorage.getItem('atithi_leads') || '[]');
-}
-
-export function addLead(lead) {
-  const leads = getLeads();
-  const traffic = JSON.parse(localStorage.getItem('atithi_traffic') || '{}');
-  const ip = traffic.lastIp || 'Unknown IP';
-  const ua = navigator.userAgent;
-  
-  const newLead = { 
-    ...lead, 
-    id: Date.now().toString(36), 
-    capturedAt: new Date().toISOString(),
-    ip: ip,
-    device: ua
-  };
-  leads.unshift(newLead);
-  localStorage.setItem('atithi_leads', JSON.stringify(leads));
-  logActivity('lead_capture', `New lead captured: ${lead.name} (${lead.email}) from IP: ${ip}`);
-}
-
-export function deleteLead(id) {
-  const leads = getLeads().filter(l => l.id !== id);
-  localStorage.setItem('atithi_leads', JSON.stringify(leads));
-  logActivity('lead_delete', 'Deleted a lead');
-}
-
-export function getRSVPs() {
-  return JSON.parse(localStorage.getItem('atithi_rsvps') || '[]');
-}
-
-export function addRSVP(rsvp) {
-  const rsvps = getRSVPs();
-  rsvps.unshift({ ...rsvp, id: Date.now().toString(36), submittedAt: new Date().toISOString() });
-  localStorage.setItem('atithi_rsvps', JSON.stringify(rsvps));
-  logActivity('rsvp', `RSVP: ${rsvp.name} — ${rsvp.attending ? 'Attending' : 'Not attending'}`);
+async function getCollectionRef(collectionName) {
+  const db = await getDB();
+  if (!db) return null;
+  const { collection } = await import('firebase/firestore');
+  return collection(db, collectionName);
 }
 
 /**
- * Compresses an image file heavily for localStorage storage constraints.
- * Converts to WebP format with high compression, and resizes down to a max width/height.
+ * ─── Services ──────────────────────────────────────────────────────────────
  */
+
+export async function getServices() {
+  const { getDocs } = await import('firebase/firestore');
+  const coll = await getCollectionRef('services');
+  if (!coll) return DEFAULT_SERVICES;
+
+  const snapshot = await getDocs(coll);
+  if (snapshot.empty) {
+    // Initial load: Populating Firestore with defaults
+    console.log('[Firestore] Populating default services...');
+    const { doc, writeBatch } = await import('firebase/firestore');
+    const db = await getDB();
+    const batch = writeBatch(db);
+    
+    DEFAULT_SERVICES.forEach(s => {
+      const ref = doc(coll, s.id);
+      batch.set(ref, s);
+    });
+    await batch.commit();
+    return DEFAULT_SERVICES;
+  }
+
+  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+}
+
+export async function addService(service) {
+  const { addDoc } = await import('firebase/firestore');
+  const coll = await getCollectionRef('services');
+  if (!coll) return null;
+
+  const docRef = await addDoc(coll, { ...service, createdAt: new Date().toISOString() });
+  await logActivity('service_add', `Added service: ${service.title}`);
+  return { ...service, id: docRef.id };
+}
+
+export async function updateService(id, updates) {
+  const { updateDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('services', id);
+  if (!ref) return null;
+
+  await updateDoc(ref, updates);
+  await logActivity('service_update', `Updated service: ${id}`);
+  return { id, ...updates };
+}
+
+export async function deleteService(id) {
+  const { deleteDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('services', id);
+  if (!ref) return;
+
+  await deleteDoc(ref);
+  await logActivity('service_delete', `Deleted service: ${id}`);
+}
+
+/**
+ * ─── Leads ─────────────────────────────────────────────────────────────────
+ */
+
+export async function getLeads() {
+  const { getDocs, query, orderBy } = await import('firebase/firestore');
+  const coll = await getCollectionRef('leads');
+  if (!coll) return [];
+
+  const q = query(coll, orderBy('capturedAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+}
+
+export async function addLead(lead) {
+  const { addDoc } = await import('firebase/firestore');
+  const coll = await getCollectionRef('leads');
+  if (!coll) return;
+
+  const ua = navigator.userAgent;
+  const newLead = { 
+    ...lead, 
+    capturedAt: new Date().toISOString(),
+    device: ua
+  };
+
+  await addDoc(coll, newLead);
+  await logActivity('lead_capture', `New lead captured: ${lead.name} (${lead.email})`);
+}
+
+export async function deleteLead(id) {
+  const { deleteDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('leads', id);
+  if (!ref) return;
+
+  await deleteDoc(ref);
+  await logActivity('lead_delete', 'Deleted a lead');
+}
+
+/**
+ * ─── RSVPs ─────────────────────────────────────────────────────────────────
+ */
+
+export async function getRSVPs() {
+  const { getDocs, query, orderBy } = await import('firebase/firestore');
+  const coll = await getCollectionRef('rsvps');
+  if (!coll) return [];
+
+  const q = query(coll, orderBy('submittedAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+}
+
+export async function addRSVP(rsvp) {
+  const { addDoc } = await import('firebase/firestore');
+  const coll = await getCollectionRef('rsvps');
+  if (!coll) return;
+
+  await addDoc(coll, { 
+    ...rsvp, 
+    submittedAt: new Date().toISOString() 
+  });
+  await logActivity('rsvp', `RSVP: ${rsvp.name} — ${rsvp.attending ? 'Attending' : 'Not attending'}`);
+}
+
+/**
+ * ─── Utilities ─────────────────────────────────────────────────────────────
+ */
+
 export function imageToCompressedBase64(file, maxWidth = 600, quality = 0.6) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -187,7 +249,6 @@ export function imageToCompressedBase64(file, maxWidth = 600, quality = 0.6) {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        // Fallback to jpeg since not all browsers perfectly support webp encoding
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
         resolve(dataUrl);
       };

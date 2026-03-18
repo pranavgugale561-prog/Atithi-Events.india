@@ -266,14 +266,19 @@ export default function ServiceSection() {
   const [activeCategory, setActiveCategory] = useState('All');
 
   useEffect(() => {
-    setServices(getServices());
+    const fetchServices = async () => {
+      const data = await getServices();
+      setServices(data);
+    };
+    fetchServices();
 
-    const handleStorageChange = () => setServices(getServices());
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('services-updated', handleStorageChange);
+    const handleRefresh = async () => {
+      const data = await getServices();
+      setServices(data);
+    };
+    window.addEventListener('services-updated', handleRefresh);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('services-updated', handleStorageChange);
+      window.removeEventListener('services-updated', handleRefresh);
     };
   }, []);
 

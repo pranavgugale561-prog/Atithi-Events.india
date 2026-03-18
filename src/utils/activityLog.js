@@ -1,22 +1,70 @@
-const STORAGE_KEY = 'atithi_activity_log';
+import { getDB } from '../firebase';
 
-export function logActivity(type, detail) {
-  const log = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  log.unshift({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    type,
-    detail,
-    timestamp: new Date().toISOString(),
-  });
-  // Keep last 200 entries
-  if (log.length > 200) log.length = 200;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(log));
+/**
+ * Log an administrative or visitor activity to Firestore.
+ */
+export async function logActivity(type, detail) {
+  try {
+    const db = await getDB();
+    if (!db) return;
+
+    const { collection, addDoc } = await import('firebase/firestore');
+    const coll = collection(db, 'activity');
+
+    await addDoc(coll, {
+      type,
+      detail,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('[ActivityLog] Failed to log:', e.message);
+  }
 }
 
-export function getActivityLog() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+/**
+ * Retrieve the latest 100 activity entries from Firestore.
+ */
+export async function getActivityLog() {
+  try {
+    const db = await getDB();
+    if (!db) return [];
+
+    const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
+    const coll = collection(db, 'activity');
+    const q = query(coll, orderBy('timestamp', 'desc'), limit(100));
+    
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (e) {
+    console.error('[ActivityLog] Fetch failed:', e);
+    return [];
+  }
 }
 
-export function clearActivityLog() {
-  localStorage.setItem(STORAGE_KEY, '[]');
+/**
+ * Clear activity logs from Firestore.
+ */
+export async function clearActivityLog() {
+  try {
+    const db = await getDB();
+    if (!db) return;
+
+    const { collection, getDocs, deleteDoc, doc, writeBatch } = await import('firebase/firestore');
+    const coll = collection(db, 'activity');
+    const snapshot = await getDocs(coll);
+    
+    if (snapshot.empty) return;
+
+    const batch = writeBatch(db);
+    snapshot.docs.forEach((d) => {
+      batch.delete(d.ref);
+    });
+    
+    await batch.commit();
+  } catch (e) {
+    console.error('[ActivityLog] Clear failed:', e);
+  }
 }

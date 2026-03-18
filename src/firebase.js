@@ -16,19 +16,24 @@ const firebaseConfig = {
 const isConfigured = !firebaseConfig.apiKey.startsWith('REPLACE');
 
 let _analytics = null;
+let _db = null;
 
 // Lazy async init — won't block render or cause build errors
 async function initFirebase() {
   if (!isConfigured) {
-    console.log('[Firebase] Add your credentials to src/firebase.js to enable Analytics.');
+    console.log('[Firebase] Add your credentials to src/firebase.js to enable Analytics & Firestore.');
     return;
   }
   try {
     const { initializeApp } = await import('firebase/app');
     const { getAnalytics } = await import('firebase/analytics');
+    const { getFirestore } = await import('firebase/firestore');
+    
     const app = initializeApp(firebaseConfig);
     _analytics = getAnalytics(app);
-    console.log('[Firebase] Analytics initialized ✓');
+    _db = getFirestore(app);
+    
+    console.log('[Firebase] Initialized ✓ (Analytics + Firestore)');
   } catch (e) {
     console.warn('[Firebase] Init failed:', e.message);
   }
@@ -36,6 +41,21 @@ async function initFirebase() {
 
 // Initialize on module load (non-blocking)
 initFirebase();
+
+/**
+ * Get the Firestore database instance.
+ * Ensures Firebase is initialized first.
+ */
+export async function getDB() {
+  if (!_db && isConfigured) {
+    const { initializeApp, getApp, getApps } = await import('firebase/app');
+    const { getFirestore } = await import('firebase/firestore');
+    
+    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    _db = getFirestore(app);
+  }
+  return _db;
+}
 
 /**
  * Log a custom event to Firebase Analytics.

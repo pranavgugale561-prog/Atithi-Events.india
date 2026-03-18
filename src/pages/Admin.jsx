@@ -74,9 +74,8 @@ function StatCard({ icon: Icon, value, label, color, sub }) {
 }
 
 // ─── Dashboard Tab ────────────────────────────────
-function DashboardTab({ setActiveTab }) {
+function DashboardTab({ setActiveTab, leads, loading }) {
   const traffic = getTrafficData();
-  const leads   = getLeads();
   const log     = getActivityLog();
   const recentLeads = leads.slice(0, 3);
   const recentLog   = log.slice(0, 5);
@@ -97,7 +96,7 @@ function DashboardTab({ setActiveTab }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
         <StatCard icon={Eye}        value={traffic.totalViews || 0}     label="Total Views"      color="#d4af37" sub={`↑ ${traffic.dailyViews?.[todayKey] || 0} today`} />
         <StatCard icon={Users}      value={traffic.uniqueVisitors || 0} label="Unique Visitors"  color="#a78bfa" />
-        <StatCard icon={Zap}        value={leads.length}                label="Total Leads"      color="#34d399" sub={leads.length > 0 ? `Latest: ${leads[0]?.name}` : 'No leads yet'} />
+        <StatCard icon={Zap}        value={loading ? '...' : leads.length}                label="Total Leads"      color="#34d399" sub={!loading && leads.length > 0 ? `Latest: ${leads[0]?.name}` : 'No leads yet'} />
         <StatCard icon={Clock}      value={`${traffic.avgDuration || 0}s`} label="Avg. Session"  color="#f87171" />
       </div>
 
@@ -193,22 +192,13 @@ function DashboardTab({ setActiveTab }) {
 }
 
 // ─── Leads Tab ────────────────────────────────────
-function LeadsTab() {
-  const [leads, setLeads] = useState(getLeads());
+function LeadsTab({ leads, refreshData }) {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newData = getLeads();
-      setLeads(prev => JSON.stringify(prev) === JSON.stringify(newData) ? prev : newData);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleDelete = (id) => {
-    deleteLead(id);
-    setLeads(getLeads());
+  const handleDelete = async (id) => {
+    await deleteLead(id);
+    await refreshData();
     if (selected?.id === id) setSelected(null);
   };
 
@@ -602,16 +592,11 @@ function SecurityTab() {
 }
 
 // ─── Activity Tab ──────────────────────────────────
-function ActivityTab() {
-  const [log, setLog] = useState(getActivityLog());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newData = getActivityLog();
-      setLog(prev => JSON.stringify(prev) === JSON.stringify(newData) ? prev : newData);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+function ActivityTab({ log, refreshData }) {
+  const handleClear = async () => {
+    await clearActivityLog();
+    await refreshData();
+  };
 
   const typeConfig = {
     visit:          { color: '#d4af37', label: 'Visit',      dot: '🌐' },
@@ -689,29 +674,22 @@ function ActivityTab() {
 }
 
 // ─── Services Tab ─────────────────────────────────
-function ServicesTab() {
-  const [services, setServices] = useState([]);
+function ServicesTab({ services, refreshData }) {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', icon: 'star', category: '', span: '', images: [] });
   const [isCompressing, setIsCompressing] = useState(false);
 
-  useEffect(() => { setServices(getServices()); }, []);
-
-  const refresh = () => {
-    setServices(getServices());
-    window.dispatchEvent(new Event('services-updated'));
-  };
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title) return;
-    if (editing) { updateService(editing, form); }
-    else { addService(form); }
+    if (editing) { await updateService(editing, form); }
+    else { await addService(form); }
     trackEvent('service_saved', { title: form.title, images_count: form.images.length, is_edit: !!editing });
     setForm({ title: '', description: '', icon: 'star', category: '', span: '', images: [] });
     setEditing(null);
     setShowForm(false);
-    refresh();
+    await refreshData();
+    window.dispatchEvent(new Event('services-updated'));
   };
 
   const handleEdit = (service) => {
@@ -720,7 +698,11 @@ function ServicesTab() {
     setShowForm(true);
   };
 
-  const handleDelete = (id) => { deleteService(id); refresh(); };
+  const handleDelete = async (id) => { 
+    await deleteService(id); 
+    await refreshData(); 
+    window.dispatchEvent(new Event('services-updated'));
+  };
 
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -892,10 +874,35 @@ function ServicesTab() {
 // ─── Admin Shell ──────────────────────────────────
 export default function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [leads, setLeads] = useState([]);
+  const [services, setServices] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const refreshData = async () => {
+    try {
+      const [l, s, a] = await Promise.all([
+        getLeads(),
+        getServices(),
+        getActivityLog(),
+      ]);
+      setLeads(l);
+      setServices(s);
+      setActivity(a);
+    } catch (e) {
+      console.error('Data fetch failed', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (localStorage.getItem('atithi_admin') !== 'true') navigate('/admin/login');
+    if (localStorage.getItem('atithi_admin') !== 'true') {
+      navigate('/admin/login');
+      return;
+    }
+    refreshData();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -905,12 +912,12 @@ export default function Admin() {
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case 'dashboard': return <DashboardTab setActiveTab={setActiveTab} />;
-      case 'leads':     return <LeadsTab />;
+      case 'dashboard': return <DashboardTab setActiveTab={setActiveTab} leads={leads} loading={loading} activity={activity} />;
+      case 'leads':     return <LeadsTab leads={leads} refreshData={refreshData} />;
       case 'traffic':   return <TrafficTab />;
       case 'security':  return <SecurityTab />;
-      case 'activity':  return <ActivityTab />;
-      case 'services':  return <ServicesTab />;
+      case 'activity':  return <ActivityTab log={activity} refreshData={refreshData} />;
+      case 'services':  return <ServicesTab services={services} refreshData={refreshData} />;
       default: return null;
     }
   };

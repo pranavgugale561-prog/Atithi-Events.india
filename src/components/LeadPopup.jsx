@@ -19,10 +19,10 @@ export default function LeadPopup() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email) return;
-    addLead(form);
+    await addLead(form);
     setSubmitted(true);
     setTimeout(() => {
       setIsVisible(false);
