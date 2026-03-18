@@ -204,27 +204,7 @@ export default function Hero() {
           and your wedding becomes the story everyone remembers.
         </motion.p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2, duration: 0.8 }}
-          style={{ display: 'flex', gap: 'clamp(14px, 4vw, 24px)', justifyContent: 'center', flexWrap: 'wrap', paddingBottom: 20 }}
-        >
-          <button
-            className="btn-squishy"
-            style={{ fontSize: '0.9rem', padding: '12px 28px' }}
-            onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            Explore Our World
-          </button>
-          <button
-            className="btn-outline"
-            style={{ fontSize: '0.9rem', padding: '10px 24px' }}
-            onClick={() => document.getElementById('mood-board')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            Build Your Vibe
-          </button>
-        </motion.div>
+        {/* Space for buttons removed as per user request */}
       </motion.div>
 
       {/* Scroll indicator */}

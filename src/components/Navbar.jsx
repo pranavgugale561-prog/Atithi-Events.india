@@ -5,7 +5,7 @@ import { Menu, X, ChevronDown } from 'lucide-react';
 
 const primaryLinks = [
   { label: 'Home', to: '/' },
-  { label: 'Timeline', to: '/timeline' },
+  { label: 'Work Timeline', to: '/timeline' },
   { label: 'Services', to: '/#services' },
   { label: 'Catering & PRO', to: '/catering-pro' },
   { label: 'Photography', to: '/photography' },
