@@ -12,6 +12,7 @@ import CartButton from './components/CartButton';
 import LeadPopup from './components/LeadPopup';
 import CustomCursor from './components/CustomCursor';
 import PageTransitionLoader from './components/PageTransitionLoader';
+import GoldenButterfly from './components/GoldenButterfly';
 import Home from './pages/Home';
 import Timeline from './pages/Timeline';
 import AdminLogin from './pages/AdminLogin';
@@ -40,6 +41,7 @@ function AppRoutes() {
       <CustomCursor />
       <GoldenDustBackground />
       <PageTransitionLoader />
+      {!isAdmin && <GoldenButterfly />}
       {!isAdmin && <Navbar />}
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
