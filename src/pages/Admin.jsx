@@ -846,7 +846,7 @@ function TimelineTab({ events, refreshData }) {
 
         // 3. Creative Title
         let fetchedTitle = json.data.title || '';
-        if (fetchedTitle.toLowerCase().includes('instagram photo by') || fetchedTitle.toLowerCase().includes('instagram video by') || fetchedTitle === 'Instagram') {
+        if (url.includes('instagram.com') || fetchedTitle.toLowerCase().includes('instagram')) {
           const descLine = cleanDesc.split(/[.!?\n]/)[0].trim();
           fetchedTitle = descLine || 'Timeline Memory';
         }

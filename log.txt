@@ -1,8 +1,0 @@
-RAW:
-atithi.events on March 16, 2026: “Big ups 🥂 to Dhokariya parivar @kartik_dhokariya for giving us the chance to plan their epic wedding! We’ve been planning forever and totally rocked it! ❤️ Next wedding, here we come! 🧿
-.
-.
-#eventmanager #weddingplanner #kartikfoundhispooja #weddingmanagement #eventlife”.
-
-CLEAN:
-Big ups 🥂 to Dhokariya parivar @kartik_dhokariya for giving us the chance to plan their epic wedding! We’ve been planning forever and totally rocked it! ❤️ Next wedding, here we come! 🧿
