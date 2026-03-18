@@ -813,11 +813,22 @@ function TimelineTab({ events, refreshData }) {
       const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(form.url)}`);
       const json = await res.json();
       if (json.status === 'success' && json.data) {
+        // Parse date from microlink or fallback to today
+        let fetchedDate = json.data.date;
+        let formattedDate = '';
+        if (fetchedDate) {
+          try { formattedDate = new Date(fetchedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch(e) {}
+        }
+        if (!formattedDate || formattedDate === 'Invalid Date') {
+          formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
         setForm(prev => ({
           ...prev,
           title: prev.title || json.data.title || '',
           description: prev.description || json.data.description || '',
           thumbnail: prev.thumbnail || (json.data.image && json.data.image.url) || '',
+          date: prev.date || formattedDate,
         }));
       } else {
         alert("Couldn't auto-fetch details. The link might be private.");
