@@ -11,6 +11,7 @@ import {
 import { getServices, addService, updateService, deleteService, getLeads, deleteLead, imageToCompressedBase64 } from '../utils/services';
 import { getActivityLog, clearActivityLog } from '../utils/activityLog';
 import { getTrafficData } from '../hooks/useTraffic';
+import { trackEvent } from '../firebase';
 
 const ICON_OPTIONS = [
   'hotel', 'truck', 'instagram', 'palette', 'chefHat', 'camera',
@@ -450,6 +451,18 @@ function TrafficTab() {
         </div>
       </div>
 
+      <div className="glass" style={{ padding: 20, borderRadius: 16, border: '1px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(212,175,55,0.05)' }}>
+        <div>
+          <h4 style={{ color: '#d4af37', margin: 0, fontSize: '0.95rem' }}>Advanced Analytics</h4>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', margin: '4px 0 0' }}>View real-time user flow and heatmaps in Firebase Console.</p>
+        </div>
+        <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" style={{
+          padding: '8px 16px', borderRadius: 8, background: '#d4af37', color: '#000', fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none'
+        }}>
+          Open Console
+        </a>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
         <StatCard icon={Eye}       value={data.totalViews || 0}      label="Lifetime Views"  color="#d4af37" sub={`${data.dailyViews?.[new Date().toISOString().slice(0,10)] || 0} today`} />
         <StatCard icon={Users}     value={data.uniqueVisitors || 0}  label="Lifetime Visitors" color="#a78bfa" />
@@ -694,6 +707,7 @@ function ServicesTab() {
     if (!form.title) return;
     if (editing) { updateService(editing, form); }
     else { addService(form); }
+    trackEvent('service_saved', { title: form.title, images_count: form.images.length, is_edit: !!editing });
     setForm({ title: '', description: '', icon: 'star', category: '', span: '', images: [] });
     setEditing(null);
     setShowForm(false);
@@ -715,7 +729,10 @@ function ServicesTab() {
     setIsCompressing(true);
     try {
       const newImages = [];
-      for (let file of files) { newImages.push(await imageToCompressedBase64(file)); }
+      for (let file of files) { 
+        newImages.push(await imageToCompressedBase64(file)); 
+        trackEvent('image_uploaded', { name: file.name, size: file.size, type: file.type });
+      }
       setForm(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
     } catch { alert('Failed to compress image.'); }
     finally { setIsCompressing(false); e.target.value = null; }
