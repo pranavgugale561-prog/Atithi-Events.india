@@ -74,11 +74,10 @@ function StatCard({ icon: Icon, value, label, color, sub }) {
 }
 
 // ─── Dashboard Tab ────────────────────────────────
-function DashboardTab({ setActiveTab, leads, loading }) {
+function DashboardTab({ setActiveTab, leads, loading, activity = [] }) {
   const traffic = getTrafficData();
-  const log     = getActivityLog();
   const recentLeads = leads.slice(0, 3);
-  const recentLog   = log.slice(0, 5);
+  const recentLog   = activity.slice(0, 5);
   const todayKey    = new Date().toISOString().slice(0, 10);
 
   return (
@@ -522,17 +521,8 @@ function TrafficTab() {
 }
 
 // ─── Security Tab ─────────────────────────────────
-function SecurityTab() {
-  const [data, setData] = useState(getTrafficData());
-  const [leads, setLeads] = useState(getLeads());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setData(prev => JSON.stringify(prev) === JSON.stringify(getTrafficData()) ? prev : getTrafficData());
-      setLeads(prev => JSON.stringify(prev) === JSON.stringify(getLeads()) ? prev : getLeads());
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+function SecurityTab({ leads }) {
+  const data = getTrafficData();
 
   const ipHits = data.ipHits || {};
   const ipList = Object.entries(ipHits).map(([ip, hits]) => {
@@ -615,7 +605,7 @@ function ActivityTab({ log, refreshData }) {
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>{log.length} events recorded.</p>
         </div>
         <button
-          onClick={() => { clearActivityLog(); setLog([]); }}
+          onClick={handleClear}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '8px 14px', borderRadius: 8,
@@ -930,7 +920,7 @@ export default function Admin() {
       case 'dashboard': return <DashboardTab setActiveTab={setActiveTab} leads={leads} loading={loading} activity={activity} />;
       case 'leads':     return <LeadsTab leads={leads} refreshData={refreshData} />;
       case 'traffic':   return <TrafficTab />;
-      case 'security':  return <SecurityTab />;
+      case 'security':  return <SecurityTab leads={leads} />;
       case 'activity':  return <ActivityTab log={activity} refreshData={refreshData} />;
       case 'services':  return <ServicesTab services={services} refreshData={refreshData} />;
       default: return null;
