@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 
 const BUTTERFLY_SVG = (
   <svg viewBox="0 0 100 100" width="30" height="30">
@@ -36,8 +37,17 @@ export default function GoldenButterfly() {
   const [isSitting, setIsSitting] = useState(false);
   const [rotation, setRotation] = useState(0);
   const controls = useAnimation();
+  const location = useLocation();
   const lastTargetRef = useRef(null);
   const mountedRef = useRef(true);
+  const forceTakeoffRef = useRef(false);
+
+  // Force take-off on navigation
+  useEffect(() => {
+    if (isSitting) {
+      forceTakeoffRef.current = true;
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -65,6 +75,7 @@ export default function GoldenButterfly() {
 
     const flyTo = async (targetRect) => {
       setIsSitting(false);
+      forceTakeoffRef.current = false;
       
       const startX = posRef.current.x;
       const startY = posRef.current.y;
@@ -97,29 +108,32 @@ export default function GoldenButterfly() {
       // Small delay initially
       await new Promise(r => setTimeout(r, 2000));
       
-      // Attempt to start butterfly at a visible entry point instead of deep offscreen if this is the first real movement
+      // Starting point: Enter from a side
       if (posRef.current.x === -100) {
-        posRef.current = { x: window.innerWidth / 2, y: -50 };
+        posRef.current = { x: -50, y: Math.random() * window.innerHeight };
       }
       
       while (mountedRef.current) {
         const target = findNewTarget();
         if (target) {
           await flyTo(target);
-          // Sit for a while
-          if (mountedRef.current) {
-            await new Promise(r => setTimeout(r, 4000 + Math.random() * 8000));
+          
+          // Hold position while sitting, but listen for navigation
+          const sitDuration = 4000 + Math.random() * 8000;
+          const sitStart = Date.now();
+          while (Date.now() - sitStart < sitDuration && mountedRef.current && !forceTakeoffRef.current) {
+            await new Promise(r => setTimeout(r, 200));
           }
         } else {
           // If no specific targets found, fly to a random visible spot on screen
           if (mountedRef.current) {
             setIsSitting(false);
+            forceTakeoffRef.current = false;
             
-            // Pick a safe random spot within the current viewport
-            const padding = 50;
+            // Pick a safe random spot within the current viewport (fixed pos, so NO window.scrollY)
+            const padding = 100;
             const targetX = (Math.random() * (window.innerWidth - padding * 2)) + padding;
-            // Add scrollY so it stays relative to what user is looking at
-            const targetY = (Math.random() * (window.innerHeight - padding * 2)) + padding + window.scrollY;
+            const targetY = (Math.random() * (window.innerHeight - padding * 2)) + padding;
 
             const startX = posRef.current.x;
             const startY = posRef.current.y;
@@ -142,7 +156,11 @@ export default function GoldenButterfly() {
             setIsSitting(Math.random() > 0.5);
             setRotation(Math.random() * 360);
             
-            await new Promise(r => setTimeout(r, 2000 + Math.random() * 4000));
+            const restDuration = 2000 + Math.random() * 4000;
+            const restStart = Date.now();
+            while (Date.now() - restStart < restDuration && mountedRef.current && !forceTakeoffRef.current) {
+              await new Promise(r => setTimeout(r, 200));
+            }
           }
         }
       }
