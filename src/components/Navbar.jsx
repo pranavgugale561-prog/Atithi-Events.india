@@ -9,7 +9,6 @@ const primaryLinks = [
   { label: 'Services', to: '/#services' },
   { label: 'Catering & PRO', to: '/catering-pro' },
   { label: 'Photography', to: '/photography' },
-  { label: 'Contact', to: '/contact' },
 ];
 
 const moreLinks = [

@@ -46,7 +46,7 @@ export default function Photography() {
               {service.title}
             </h3>
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              {service.desc}
+              {service.desc} // Replace with actual images later
             </p>
           </motion.div>
         ))}

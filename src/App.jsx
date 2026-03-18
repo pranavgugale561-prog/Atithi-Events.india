@@ -26,6 +26,7 @@ import WhySocialMedia from './pages/WhySocialMedia';
 import EventClasses from './pages/EventClasses';
 import CateringPRO from './pages/CateringPRO';
 import AboutContact from './pages/AboutContact';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function AppRoutes() {
   const location = useLocation();
@@ -42,7 +43,7 @@ function AppRoutes() {
   }, [location.pathname, location.hash]);
 
   return (
-    <>
+    <ErrorBoundary>
       <CustomCursor />
       <GoldenDustBackground />
       <PageTransitionLoader />
@@ -64,7 +65,7 @@ function AppRoutes() {
       {!isAdmin && <CartButton />}
       {!isAdmin && <ChatBubble />}
       {!isAdmin && <LeadPopup />}
-    </>
+    </ErrorBoundary>
   );
 }
 
@@ -93,12 +94,14 @@ function App() {
   }, [loaded]);
 
   return (
-    <CartProvider>
-      <Router>
-        {!loaded && <Loader onComplete={handleLoaderComplete} />}
-        <AppRoutes />
-      </Router>
-    </CartProvider>
+    <ErrorBoundary>
+      <CartProvider>
+        <Router>
+          {!loaded && <Loader onComplete={handleLoaderComplete} />}
+          <AppRoutes />
+        </Router>
+      </CartProvider>
+    </ErrorBoundary>
   );
 }
 
