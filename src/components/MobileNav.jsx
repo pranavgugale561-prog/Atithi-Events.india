@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Briefcase, Palette, Clock, ShoppingCart, Sparkles } from 'lucide-react';
+import { Home, Briefcase, Palette, Clock, ShoppingCart, Sparkles, Phone } from 'lucide-react';
 import { useCart } from './CartContext';
 
 export default function MobileNav() {
