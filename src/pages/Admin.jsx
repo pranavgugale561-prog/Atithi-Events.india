@@ -801,6 +801,33 @@ function TimelineTab({ events, refreshData }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', date: '', url: '', description: '', thumbnail: '' });
   const [isCompressing, setIsCompressing] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+
+  const handleAutoFill = async () => {
+    if (!form.url) {
+      alert("Please paste a link first.");
+      return;
+    }
+    setIsFetching(true);
+    try {
+      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(form.url)}`);
+      const json = await res.json();
+      if (json.status === 'success' && json.data) {
+        setForm(prev => ({
+          ...prev,
+          title: prev.title || json.data.title || '',
+          description: prev.description || json.data.description || '',
+          thumbnail: prev.thumbnail || (json.data.image && json.data.image.url) || '',
+        }));
+      } else {
+        alert("Couldn't auto-fetch details. The link might be private.");
+      }
+    } catch (e) {
+      alert("Failed to fetch link details.");
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.title || !form.thumbnail || !form.url) return;
@@ -871,7 +898,15 @@ function TimelineTab({ events, refreshData }) {
                 <input className="input-luxury" placeholder="e.g. Mar 16, 2026" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
               </div>
               <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Link URL (Instagram/YouTube/Facebook)</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block' }}>Link URL (Instagram/YouTube/Facebook)</label>
+                  <button type="button" onClick={handleAutoFill} disabled={isFetching || !form.url} style={{
+                    fontSize: '0.7rem', color: '#d4af37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', 
+                    borderRadius: 6, padding: '4px 8px', cursor: (isFetching || !form.url) ? 'not-allowed' : 'pointer'
+                  }}>
+                    {isFetching ? 'Fetching...' : '✨ Auto Fill Details'}
+                  </button>
+                </div>
                 <input className="input-luxury" placeholder="https://instagram.com/p/..." value={form.url} onChange={e => setForm({ ...form, url: e.target.value })} />
               </div>
               <div style={{ gridColumn: 'span 2' }}>
