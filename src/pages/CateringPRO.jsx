@@ -1,0 +1,118 @@
+import { motion } from 'framer-motion';
+import { ChefHat, Users, GlassWater, Crown, Sparkles, Star } from 'lucide-react';
+
+export default function CateringPRO() {
+  const features = [
+    {
+      icon: Crown,
+      title: 'Premium PRO Girls Team',
+      desc: 'Highly trained professionals for VIP guest handling, elegant welcomes, and seamless crowd coordination.'
+    },
+    {
+      icon: ChefHat,
+      title: 'Catering Management',
+      desc: 'Flawless execution of food service, ensuring every dish is presented beautifully and served at the perfect temperature.'
+    },
+    {
+      icon: GlassWater,
+      title: 'Table Hosting',
+      desc: 'Dedicated table hosts to attend to your special guests, managing their every need with grace and efficiency.'
+    },
+    {
+      icon: Users,
+      title: 'Guest Experience',
+      desc: 'From seating arrangements to personalized service, we ensure your guests feel like absolute royalty.'
+    }
+  ];
+
+  return (
+    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto min-h-screen">
+      {/* Header Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-16"
+      >
+        <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.9rem', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <Star size={14} /> The Ultimate Luxury Experience <Star size={14} />
+        </span>
+        <h1 className="section-title mt-4 mb-6">Catering Management <br />& Premium PRO Girls</h1>
+        <p className="text-muted max-w-[800px] mx-auto" style={{ fontSize: '1.1rem', lineHeight: 1.6 }}>
+          Elevate your event with world-class hospitality. From flawless catering execution to our elite team of PRO Girls ensuring every guest feels like royalty, we handle the intricacies of premium service.
+        </p>
+      </motion.div>
+
+      {/* Feature Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '2rem',
+        marginBottom: '5rem'
+      }}>
+        {features.map((feature, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1 }}
+            className="glass"
+            style={{ 
+              padding: '2.5rem', 
+              borderRadius: '20px', 
+              textAlign: 'center',
+              borderTop: '1px solid rgba(212,175,55,0.2)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            <div style={{
+              position: 'absolute', top: -40, right: -40,
+              width: 120, height: 120, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%)',
+            }} />
+            <div style={{
+              width: 64, height: 64, margin: '0 auto 1.5rem', borderRadius: '16px',
+              background: 'linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid rgba(212,175,55,0.2)'
+            }}>
+              <feature.icon size={28} color="var(--accent-gold)" />
+            </div>
+            <h3 style={{ fontSize: '1.3rem', color: '#fff', marginBottom: '1rem', fontWeight: 600 }}>
+              {feature.title}
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>
+              {feature.desc}
+            </p>
+          </motion.div>
+        ))}
+      </div>
+      
+      {/* Visual Showcase / Promise */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        className="glass"
+        style={{ 
+          borderRadius: '24px', 
+          padding: '4rem 2rem', 
+          textAlign: 'center', 
+          border: '1px solid rgba(212,175,55,0.3)',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(212,175,55,0.02) 100%)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
+        <Sparkles size={40} color="var(--accent-gold)" style={{ margin: '0 auto 1.5rem', opacity: 0.5 }} />
+        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>
+          Impeccable Service, Delivered.
+        </h2>
+        <p style={{ color: 'var(--text-muted)', maxWidth: '700px', margin: '0 auto', fontSize: '1.05rem', lineHeight: 1.7 }}>
+          Our catering management isn't just about serving food; it's about choreographing a culinary experience. Paired with our trained PRO Girls who manage VVIPs, navigate crowds, and ensure smooth table hosting, your event transforms into an elite, stress-free celebration.
+        </p>
+      </motion.div>
+    </div>
+  );
+}
