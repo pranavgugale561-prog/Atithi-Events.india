@@ -824,16 +824,25 @@ function TimelineTab({ events, refreshData }) {
 
         // 2. Clean Description (Instagram meta stuff and hashtags)
         let cleanDesc = json.data.description || '';
-        // Remove '1,200 likes, 40 comments - atithievents on March 16...' prefix
-        if (cleanDesc.match(/^[0-9,KMB]+\s+(likes|views|Play).*?-.*?:/is)) {
+        
+        // Remove "Likes/Comments - Username on Date:" prefix
+        if (cleanDesc.match(/^[0-9,KMBkm]+\s+(likes|views|Play).*?-.*?:\s*/is)) {
           const parts = cleanDesc.split(':');
-          parts.shift(); // remove the prefix before the first colon
+          parts.shift(); // remove the prefix
           cleanDesc = parts.join(':').trim();
+        } else if (cleanDesc.includes(' on ') && cleanDesc.indexOf(':') > 0 && cleanDesc.indexOf(':') < 100) {
+          // Remove "Username on Date:" prefix
+          cleanDesc = cleanDesc.substring(cleanDesc.indexOf(':') + 1).trim();
         }
-        // Remove leading/trailing quotes often left by the prefix split
-        cleanDesc = cleanDesc.replace(/^["'\u201C\u2018]/, '').replace(/["'\u201D\u2019]$/, '').trim();
-        // Remove hashtags
+        
+        // Remove leading quotes
+        cleanDesc = cleanDesc.replace(/^["'\u201C\u2018\u201D\u2019]+/, '').trim();
+        
+        // Remove hashtags (including anything trailing after them since they're usually at the end)
         cleanDesc = cleanDesc.replace(/#[\w\u0590-\u05ff]+/gi, '').replace(/\s+/g, ' ').trim();
+        
+        // Remove trailing dots, spaces, or quotes
+        cleanDesc = cleanDesc.replace(/[\.\s"'\u201C\u2018\u201D\u2019]+$/, '').trim();
 
         // 3. Creative Title
         let fetchedTitle = json.data.title || '';
