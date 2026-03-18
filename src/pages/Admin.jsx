@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { getServices, addService, updateService, deleteService, getLeads, deleteLead, imageToCompressedBase64 } from '../utils/services';
 import { getActivityLog, clearActivityLog, logActivity } from '../utils/activityLog';
-import { getTrafficData } from '../hooks/useTraffic';
+import { getTrafficData, getGlobalTrafficData, useActiveSessions } from '../hooks/useTraffic';
 import { trackEvent } from '../firebase';
 
 const ICON_OPTIONS = [
@@ -74,9 +74,59 @@ function StatCard({ icon: Icon, value, label, color, sub }) {
   );
 }
 
+// ─── Live Sessions List ───────────────────────────
+function LiveSessionsList({ sessions }) {
+  if (sessions.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '16px 0', color: 'rgba(255,255,255,0.3)', fontSize: '0.82rem' }}>
+        No active visitors right now.
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {sessions.map(s => {
+        const page = s.page || '/';
+        const ip = s.ip && s.ip !== 'Unknown' ? s.ip : null;
+        return (
+          <div key={s.id} style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '8px 12px',
+            background: 'rgba(52,211,153,0.05)',
+            border: '1px solid rgba(52,211,153,0.15)',
+            borderRadius: 10,
+          }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <Globe size={16} color="#34d399" />
+              <div style={{
+                position: 'absolute', top: -2, right: -2,
+                width: 6, height: 6, borderRadius: '50%',
+                background: '#34d399',
+                boxShadow: '0 0 6px #34d399',
+                animation: 'pulse 2s infinite',
+              }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, color: '#fff', fontSize: '0.8rem', fontWeight: 500 }}>
+                Visiting <span style={{ color: '#34d399', fontFamily: 'monospace' }}>{page}</span>
+              </p>
+              {ip && (
+                <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', fontFamily: 'monospace' }}>{ip}</p>
+              )}
+            </div>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399', flexShrink: 0 }} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Dashboard Tab ────────────────────────────────
-function DashboardTab({ setActiveTab, leads, loading, activity = [] }) {
-  const traffic = getTrafficData();
+function DashboardTab({ setActiveTab, leads, loading, activity = [], globalTraffic }) {
+  const localTraffic = getTrafficData();
+  const traffic = globalTraffic || localTraffic;
+  const { count: activeSessions, sessions: liveSessionsList } = useActiveSessions();
   const recentLeads = leads.slice(0, 3);
   const recentLog   = activity.slice(0, 5);
   const todayKey    = new Date().toISOString().slice(0, 10);
@@ -96,8 +146,27 @@ function DashboardTab({ setActiveTab, leads, loading, activity = [] }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
         <StatCard icon={Eye}        value={traffic.totalViews || 0}     label="Total Views"      color="#d4af37" sub={`↑ ${traffic.dailyViews?.[todayKey] || 0} today`} />
         <StatCard icon={Users}      value={traffic.uniqueVisitors || 0} label="Unique Visitors"  color="#a78bfa" />
-        <StatCard icon={Zap}        value={loading ? '...' : leads.length}                label="Total Leads"      color="#34d399" sub={!loading && leads.length > 0 ? `Latest: ${leads[0]?.name}` : 'No leads yet'} />
-        <StatCard icon={Clock}      value={`${traffic.avgDuration || 0}s`} label="Avg. Session"  color="#f87171" />
+        <StatCard icon={Zap}        value={loading ? '...' : leads.length} label="Total Leads" color="#34d399" sub={!loading && leads.length > 0 ? `Latest: ${leads[0]?.name}` : 'No leads yet'} />
+        <StatCard icon={Clock}      value={`${localTraffic.avgDuration || 0}s`} label="Avg. Session"  color="#f87171" />
+      </div>
+
+      {/* Active Now Banner */}
+      <div style={{
+        background: activeSessions > 0 ? 'rgba(52,211,153,0.07)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${activeSessions > 0 ? 'rgba(52,211,153,0.3)' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius: 16, padding: 20,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: liveSessionsList.length > 0 ? 14 : 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: activeSessions > 0 ? '#34d399' : 'rgba(255,255,255,0.2)', boxShadow: activeSessions > 0 ? '0 0 10px #34d399' : 'none' }} />
+            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '0.95rem', margin: 0 }}>Active Right Now</h3>
+          </div>
+          <span style={{
+            fontSize: '1.6rem', fontWeight: 800,
+            color: activeSessions > 0 ? '#34d399' : 'rgba(255,255,255,0.25)',
+          }}>{activeSessions}</span>
+        </div>
+        {liveSessionsList.length > 0 && <LiveSessionsList sessions={liveSessionsList} />}
       </div>
 
       {/* IP Info Banner */}
@@ -416,16 +485,10 @@ function LeadsTab({ leads, refreshData }) {
 }
 
 // ─── Traffic Tab ──────────────────────────────────
-function TrafficTab() {
-  const [data, setData] = useState(getTrafficData());
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newData = getTrafficData();
-      setData(prev => JSON.stringify(prev) === JSON.stringify(newData) ? prev : newData);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
+function TrafficTab({ globalTraffic }) {
+  const localTraffic = getTrafficData();
+  const data = globalTraffic || localTraffic;
+  const { count: activeSessions, sessions: liveSessionsList } = useActiveSessions();
   const dailyEntries = Object.entries(data.dailyViews || {}).slice(-7).reverse();
   const maxBar = Math.max(...dailyEntries.map(([, v]) => v), 1);
 
@@ -516,6 +579,31 @@ function TrafficTab() {
             })}
           </div>
         )}
+      </div>
+
+      {/* Active Sessions Panel */}
+      <div style={{
+        background: activeSessions > 0 ? 'rgba(52,211,153,0.06)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${activeSessions > 0 ? 'rgba(52,211,153,0.25)' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius: 16, padding: 20,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 10, height: 10, borderRadius: '50%',
+              background: activeSessions > 0 ? '#34d399' : 'rgba(255,255,255,0.2)',
+              boxShadow: activeSessions > 0 ? '0 0 10px #34d399' : 'none',
+            }} />
+            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '0.95rem', margin: 0 }}>
+              Active Sessions — Live
+            </h3>
+          </div>
+          <span style={{
+            fontSize: '2rem', fontWeight: 800,
+            color: activeSessions > 0 ? '#34d399' : 'rgba(255,255,255,0.2)',
+          }}>{activeSessions}</span>
+        </div>
+        <LiveSessionsList sessions={liveSessionsList} />
       </div>
     </div>
   );
@@ -898,19 +986,28 @@ export default function Admin() {
   const [leads, setLeads] = useState([]);
   const [services, setServices] = useState([]);
   const [activity, setActivity] = useState([]);
+  const [globalTraffic, setGlobalTraffic] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const refreshData = async () => {
     try {
-      const [l, s, a] = await Promise.all([
-        getLeads(),
-        getServices(),
-        getActivityLog(),
+      // Use individual try-catch to prevent one failure from blocking all data
+      const fetchLeads = async () => { try { return await getLeads(); } catch(e) { console.error('Leads fail', e); return []; } };
+      const fetchServices = async () => { try { return await getServices(); } catch(e) { console.error('Services fail', e); return []; } };
+      const fetchActivity = async () => { try { return await getActivityLog(); } catch(e) { console.error('Activity fail', e); return []; } };
+      const fetchTraffic = async () => { try { return await getGlobalTrafficData(); } catch(e) { console.error('Traffic fail', e); return null; } };
+
+      const [l, s, a, t] = await Promise.all([
+        fetchLeads(),
+        fetchServices(),
+        fetchActivity(),
+        fetchTraffic(),
       ]);
       setLeads(l);
       setServices(s);
       setActivity(a);
+      setGlobalTraffic(t);
     } catch (e) {
       console.error('Data fetch failed', e);
     } finally {
@@ -937,9 +1034,9 @@ export default function Admin() {
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case 'dashboard': return <DashboardTab setActiveTab={setActiveTab} leads={leads} loading={loading} activity={activity} />;
+      case 'dashboard': return <DashboardTab setActiveTab={setActiveTab} leads={leads} loading={loading} activity={activity} globalTraffic={globalTraffic} />;
       case 'leads':     return <LeadsTab leads={leads} refreshData={refreshData} />;
-      case 'traffic':   return <TrafficTab />;
+      case 'traffic':   return <TrafficTab globalTraffic={globalTraffic} />;
       case 'security':  return <SecurityTab leads={leads} />;
       case 'activity':  return <ActivityTab log={activity} refreshData={refreshData} />;
       case 'services':  return <ServicesTab services={services} refreshData={refreshData} />;

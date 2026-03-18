@@ -161,13 +161,21 @@ export async function deleteService(id) {
  */
 
 export async function getLeads() {
-  const { getDocs, query, orderBy } = await import('firebase/firestore');
+  const { getDocs, query, orderBy, limit } = await import('firebase/firestore');
   const coll = await getCollectionRef('leads');
   if (!coll) return [];
 
-  const q = query(coll, orderBy('capturedAt', 'desc'));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  const q = query(coll, orderBy('capturedAt', 'desc'), limit(100));
+  try {
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  } catch (e) {
+    console.warn('[Services] Leads sorted fetch failed, falling back to unsorted:', e.message);
+    const fallbackQ = query(coll, limit(100));
+    const snapshot = await getDocs(fallbackQ);
+    const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+    return data.sort((a, b) => (b.capturedAt || '').localeCompare(a.capturedAt || ''));
+  }
 }
 
 export async function addLead(lead) {
@@ -203,13 +211,21 @@ export async function deleteLead(id) {
  */
 
 export async function getRSVPs() {
-  const { getDocs, query, orderBy } = await import('firebase/firestore');
+  const { getDocs, query, orderBy, limit } = await import('firebase/firestore');
   const coll = await getCollectionRef('rsvps');
   if (!coll) return [];
 
-  const q = query(coll, orderBy('submittedAt', 'desc'));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  const q = query(coll, orderBy('submittedAt', 'desc'), limit(100));
+  try {
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  } catch (e) {
+    console.warn('[Services] RSVPs sorted fetch failed, falling back to unsorted:', e.message);
+    const fallbackQ = query(coll, limit(100));
+    const snapshot = await getDocs(fallbackQ);
+    const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+    return data.sort((a, b) => (b.submittedAt || '').localeCompare(a.submittedAt || ''));
+  }
 }
 
 export async function addRSVP(rsvp) {

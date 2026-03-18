@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Sparkles } from 'lucide-react';
+import { X, Heart, Sparkles, RefreshCw } from 'lucide-react';
 import { addLead } from '../utils/services';
 
 export default function LeadPopup() {
@@ -19,14 +19,25 @@ export default function LeadPopup() {
     return () => clearTimeout(timer);
   }, []);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email) return;
-    await addLead(form);
-    setSubmitted(true);
-    setTimeout(() => {
-      setIsVisible(false);
-    }, 2500);
+    
+    setIsSubmitting(true);
+    try {
+      await addLead(form);
+      setSubmitted(true);
+      setTimeout(() => {
+        setIsVisible(false);
+      }, 2500);
+    } catch (error) {
+      console.error('[LeadPopup] Submission failed:', error);
+      alert('Something went wrong. Please try again or contact us directly.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field, value) => {
@@ -107,9 +118,9 @@ export default function LeadPopup() {
                     value={form.phone}
                     onChange={e => handleChange('phone', e.target.value)}
                   />
-                  <button type="submit" className="btn-squishy" style={{ width: '100%', marginTop: 4 }}>
-                    <Sparkles size={18} />
-                    Get My Personalized Proposal
+                  <button type="submit" className="btn-squishy" disabled={isSubmitting} style={{ width: '100%', marginTop: 4, opacity: isSubmitting ? 0.7 : 1 }}>
+                    {isSubmitting ? <RefreshCw size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                    {isSubmitting ? 'Sending Request...' : 'Get My Personalized Proposal'}
                   </button>
                 </form>
 
