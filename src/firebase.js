@@ -1,13 +1,7 @@
 // ─── Firebase Configuration ────────────────────────────────────────────────
 // Replace these placeholder values with your actual Firebase project config.
 // Get them from: Firebase Console → Project Settings → Your apps → Web app → SDK setup
-//
-// IMPORTANT: These values are safe to include in frontend code — Firebase security
-// is enforced by Firestore/Auth rules, not by hiding the config.
 // ──────────────────────────────────────────────────────────────────────────────
-
-import { initializeApp } from 'firebase/app';
-import { getAnalytics, logEvent } from 'firebase/analytics';
 
 const firebaseConfig = {
   apiKey: "REPLACE_WITH_YOUR_API_KEY",
@@ -19,37 +13,41 @@ const firebaseConfig = {
   measurementId: "REPLACE_WITH_YOUR_MEASUREMENT_ID"
 };
 
-// Check if config is still placeholder (not yet configured)
+// Check if config is still placeholder
 const isConfigured = !firebaseConfig.apiKey.startsWith('REPLACE');
 
-let app = null;
-let analytics = null;
+let _analytics = null;
 
-if (isConfigured) {
+// Lazy async init — won't block render or cause build errors
+async function initFirebase() {
+  if (!isConfigured) {
+    console.log('[Firebase] Add your credentials to src/firebase.js to enable Analytics.');
+    return;
+  }
   try {
-    app = initializeApp(firebaseConfig);
-    analytics = getAnalytics(app);
+    const { initializeApp } = await import('firebase/app');
+    const { getAnalytics } = await import('firebase/analytics');
+    const app = initializeApp(firebaseConfig);
+    _analytics = getAnalytics(app);
     console.log('[Firebase] Analytics initialized ✓');
   } catch (e) {
-    console.warn('[Firebase] Failed to initialize:', e.message);
+    console.warn('[Firebase] Init failed:', e.message);
   }
-} else {
-  console.log('[Firebase] Pending configuration — analytics disabled until credentials are added to src/firebase.js');
 }
+
+// Initialize on module load (non-blocking)
+initFirebase();
 
 /**
  * Log a custom event to Firebase Analytics.
- * @param {string} eventName - Event name (e.g. 'page_view', 'service_click')
- * @param {object} params - Optional extra parameters
+ * No-op if Firebase is not yet configured or initialized.
  */
-export function trackEvent(eventName, params = {}) {
-  if (!analytics) return; // silently no-op if not configured
+export async function trackEvent(eventName, params = {}) {
+  if (!_analytics) return;
   try {
-    logEvent(analytics, eventName, params);
+    const { logEvent } = await import('firebase/analytics');
+    logEvent(_analytics, eventName, params);
   } catch (e) {
     console.warn('[Firebase Analytics]', e.message);
   }
 }
-
-export { analytics };
-export default app;
