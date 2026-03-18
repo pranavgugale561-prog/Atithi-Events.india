@@ -908,6 +908,10 @@ export default function Admin() {
       return;
     }
     refreshData();
+    
+    // Periodically refresh data every 10 seconds
+    const interval = setInterval(refreshData, 10000);
+    return () => clearInterval(interval);
   }, [navigate]);
 
   const handleLogout = () => {
