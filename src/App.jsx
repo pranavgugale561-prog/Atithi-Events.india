@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AnimatePresence } from 'framer-motion';
 import { useTimeOfDay } from './hooks/useTimeOfDay';
 import { useTraffic } from './hooks/useTraffic';
+import { useClickTracking } from './hooks/useClickTracking';
 import { CartProvider } from './components/CartContext';
 import Loader from './components/Loader';
 import Navbar from './components/Navbar';
@@ -28,6 +29,9 @@ import CateringPRO from './pages/CateringPRO';
 function AppRoutes() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+
+  // Only track clicks on public-facing pages
+  useClickTracking();
 
   // Reset scroll to top on route change (but not on hash changes)
   useEffect(() => {

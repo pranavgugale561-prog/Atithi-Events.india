@@ -680,10 +680,12 @@ function ActivityTab({ log, refreshData }) {
   const typeConfig = {
     visit:          { color: '#d4af37', label: 'Visit',      dot: '🌐' },
     lead_capture:   { color: '#34d399', label: 'New Lead',   dot: '🎯' },
+    tap:            { color: '#38bdf8', label: 'Tap',        dot: '👆' },
+    rsvp:           { color: '#c084fc', label: 'RSVP',       dot: '💌' },
     service_add:    { color: '#60a5fa', label: 'Added',      dot: '➕' },
-    service_update: { color: '#a78bfa', label: 'Updated',    dot: '✏️' },
-    service_delete: { color: '#f87171', label: 'Deleted',    dot: '🗑️' },
-    lead_delete:    { color: '#fb923c', label: 'Lead Del.',   dot: '❌' },
+    service_update: { color: '#a78bfa', label: 'Updated',   dot: '✏️' },
+    service_delete: { color: '#f87171', label: 'Deleted',   dot: '🗑️' },
+    lead_delete:    { color: '#fb923c', label: 'Lead Del.', dot: '❌' },
   };
 
   return (
@@ -755,6 +757,11 @@ function ActivityTab({ log, refreshData }) {
                   <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', margin: 0 }}>
                     {new Date(entry.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                   </p>
+                  {entry.page && (
+                    <span style={{ fontSize: '0.7rem', color: '#38bdf8', fontFamily: 'monospace', background: 'rgba(56,189,248,0.08)', padding: '1px 6px', borderRadius: 4 }}>
+                      {entry.page}
+                    </span>
+                  )}
                   {entry.ip && (
                     <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', fontFamily: 'monospace' }}>
                       IP: {entry.ip}
