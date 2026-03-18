@@ -3,7 +3,7 @@ import { getDB } from '../firebase';
 /**
  * Log an administrative or visitor activity to Firestore.
  */
-export async function logActivity(type, detail) {
+export async function logActivity(type, detail, metadata = {}) {
   try {
     const db = await getDB();
     if (!db) return;
@@ -11,9 +11,16 @@ export async function logActivity(type, detail) {
     const { collection, addDoc } = await import('firebase/firestore');
     const coll = collection(db, 'activity');
 
+    // Auto-grab IP and Device if not provided
+    const lastIp = localStorage.getItem('atithi_last_ip') || 'Unknown';
+    const ua = navigator.userAgent;
+
     await addDoc(coll, {
       type,
       detail,
+      ip: metadata.ip || lastIp,
+      device: metadata.device || ua,
+      ...metadata,
       timestamp: new Date().toISOString(),
     });
   } catch (e) {

@@ -37,9 +37,10 @@ export function useTraffic() {
           const ip = data.ip || 'Unknown IP';
           const loc = data.city ? `${data.city}, ${data.country_name}` : 'Unknown Location';
           traffic.lastIp = ip;
+          localStorage.setItem('atithi_last_ip', ip); // Persist for other logs
           traffic.ipHits[ip] = (traffic.ipHits[ip] || 0) + 1;
           localStorage.setItem('atithi_traffic', JSON.stringify(traffic));
-          logActivity('visit', `New visitor arrived from ${loc} (IP: ${ip})`);
+          logActivity('visit', `New visitor arrived from ${loc}`, { ip });
           // Track location in Firebase
           trackEvent('visitor_location', { city: data.city || 'Unknown', country: data.country_name || 'Unknown', ip });
         })

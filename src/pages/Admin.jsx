@@ -653,10 +653,25 @@ function ActivityTab({ log, refreshData }) {
             >
               <span style={{ fontSize: '1rem', flexShrink: 0 }}>{cfg.dot}</span>
               <div style={{ flex: 1 }}>
-                <p style={{ color: '#fff', fontSize: '0.85rem', margin: 0, lineHeight: 1.4 }}>{entry.detail}</p>
-                <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem', margin: '3px 0 0' }}>
-                  {new Date(entry.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                <p style={{ color: '#fff', fontSize: '0.85rem', margin: 0, lineHeight: 1.4 }}>
+                  {entry.detail}
+                  {entry.customerName && <span style={{ color: 'var(--accent-gold)', marginLeft: 6, fontWeight: 600 }}>({entry.customerName})</span>}
                 </p>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
+                  <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', margin: 0 }}>
+                    {new Date(entry.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                  </p>
+                  {entry.ip && (
+                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', fontFamily: 'monospace' }}>
+                      IP: {entry.ip}
+                    </span>
+                  )}
+                  {entry.device && (
+                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>
+                      {entry.device}
+                    </span>
+                  )}
+                </div>
               </div>
               <span style={{
                 fontSize: '0.68rem', padding: '3px 8px', borderRadius: 20, height: 'fit-content',

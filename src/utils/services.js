@@ -183,7 +183,10 @@ export async function addLead(lead) {
   };
 
   await addDoc(coll, newLead);
-  await logActivity('lead_capture', `New lead captured: ${lead.name} (${lead.email})`);
+  await logActivity('lead_capture', `New lead captured: ${lead.name}`, { 
+    customerName: lead.name, 
+    customerEmail: lead.email 
+  });
 }
 
 export async function deleteLead(id) {
@@ -218,7 +221,10 @@ export async function addRSVP(rsvp) {
     ...rsvp, 
     submittedAt: new Date().toISOString() 
   });
-  await logActivity('rsvp', `RSVP: ${rsvp.name} — ${rsvp.attending ? 'Attending' : 'Not attending'}`);
+  await logActivity('rsvp', `RSVP: ${rsvp.name} — ${rsvp.attending ? 'Attending' : 'Not attending'}`, {
+    customerName: rsvp.name,
+    customerEmail: rsvp.email
+  });
 }
 
 /**
