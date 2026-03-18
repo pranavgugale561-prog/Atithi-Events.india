@@ -197,14 +197,12 @@ export default function Hero() {
             color: 'var(--text-secondary)',
             lineHeight: 1.6,
             maxWidth: 500,
-            margin: '0 auto 40px',
+            margin: '0 auto',
           }}
         >
           Where every detail is a love letter, every moment is cinematic,
           and your wedding becomes the story everyone remembers.
         </motion.p>
-
-        {/* Space for buttons removed as per user request */}
       </motion.div>
 
       {/* Scroll indicator */}
