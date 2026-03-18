@@ -6,7 +6,7 @@ import { addLead } from '../utils/services';
 export default function LeadPopup() {
   const [isVisible, setIsVisible] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', eventDate: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '' });
 
   useEffect(() => {
     if (sessionStorage.getItem('atithi_lead_shown')) return;
@@ -106,13 +106,6 @@ export default function LeadPopup() {
                     placeholder="Phone Number"
                     value={form.phone}
                     onChange={e => handleChange('phone', e.target.value)}
-                  />
-                  <input
-                    className="input-luxury"
-                    type="date"
-                    placeholder="Expected Event Date"
-                    value={form.eventDate}
-                    onChange={e => handleChange('eventDate', e.target.value)}
                   />
                   <button type="submit" className="btn-squishy" style={{ width: '100%', marginTop: 4 }}>
                     <Sparkles size={18} />
