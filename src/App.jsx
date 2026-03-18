@@ -28,6 +28,13 @@ function AppRoutes() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
 
+  // Reset scroll to top on route change (but not on hash changes)
+  useEffect(() => {
+    if (!location.hash) {
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname, location.hash]);
+
   return (
     <>
       <CustomCursor />
