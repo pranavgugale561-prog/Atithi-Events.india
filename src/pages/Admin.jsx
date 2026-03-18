@@ -908,7 +908,7 @@ function ServicesTab({ services, refreshData }) {
               {/* Image Upload */}
               <div style={{ gridColumn: 'span 2', background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
                 <label style={{ fontSize: '0.8rem', color: '#d4af37', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <ImagePlus size={15} /> Photos ({form.images.length}/4)
+                  <ImagePlus size={15} /> Photos ({form.images.length}/10)
                 </label>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   {form.images.map((src, idx) => (
@@ -919,7 +919,7 @@ function ServicesTab({ services, refreshData }) {
                       </button>
                     </div>
                   ))}
-                  {form.images.length < 4 && (
+                  {form.images.length < 10 && (
                     <div>
                       <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={isCompressing} style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }} />
                       {isCompressing && <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: 4, display: 'block' }}>Compressing…</span>}

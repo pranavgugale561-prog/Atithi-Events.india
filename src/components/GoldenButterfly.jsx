@@ -106,14 +106,38 @@ export default function GoldenButterfly() {
             await new Promise(r => setTimeout(r, 4000 + Math.random() * 8000));
           }
         } else {
-          // If no targets content ourselves with center or random orbit
+          // If no specific targets found, fly to a random visible spot on screen
           if (mountedRef.current) {
+            setIsSitting(false);
+            
+            // Pick a safe random spot within the current viewport
+            const padding = 50;
+            const targetX = (Math.random() * (window.innerWidth - padding * 2)) + padding;
+            // Add scrollY so it stays relative to what user is looking at
+            const targetY = (Math.random() * (window.innerHeight - padding * 2)) + padding + window.scrollY;
+
+            const startX = position.x;
+            const startY = position.y;
+            
+            const midX = (startX + targetX) / 2 + (Math.random() - 0.5) * 200;
+            const midY = (startY + targetY) / 2 - 100;
+
+            const angle = Math.atan2(targetY - startY, targetX - startX) * (180 / Math.PI);
+            setRotation(angle + 90);
+
             await controls.start({
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-              transition: { duration: 5 }
+              x: [startX, midX, targetX],
+              y: [startY, midY, targetY],
+              transition: { duration: 4 + Math.random() * 2, ease: "easeInOut" }
             });
-            await new Promise(r => setTimeout(r, 2000));
+
+            setPosition({ x: targetX, y: targetY });
+            
+            // Rest mid-air or hover
+            setIsSitting(Math.random() > 0.5);
+            setRotation(Math.random() * 360);
+            
+            await new Promise(r => setTimeout(r, 2000 + Math.random() * 4000));
           }
         }
       }
