@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { getServices, addService, updateService, deleteService, getLeads, deleteLead, imageToCompressedBase64 } from '../utils/services';
 import { getActivityLog, clearActivityLog, logActivity } from '../utils/activityLog';
+import { getTimelineEvents, addTimelineEvent, deleteTimelineEvent } from '../utils/timeline';
 import { getTrafficData, getGlobalTrafficData, useActiveSessions } from '../hooks/useTraffic';
 import { trackEvent } from '../firebase';
 
@@ -34,6 +35,7 @@ const TABS = [
   { id: 'traffic',  label: 'Traffic',    icon: BarChart3 },
   { id: 'security', label: 'Security',   icon: Shield },
   { id: 'activity', label: 'Activity',   icon: Activity },
+  { id: 'timeline', label: 'Timeline',   icon: Calendar },
   { id: 'services', label: 'Services',   icon: Briefcase },
 ];
 
@@ -794,6 +796,155 @@ function ActivityTab({ log, refreshData }) {
   );
 }
 
+// ─── Timeline Tab ─────────────────────────────────
+function TimelineTab({ events, refreshData }) {
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ title: '', date: '', url: '', description: '', thumbnail: '' });
+  const [isCompressing, setIsCompressing] = useState(false);
+
+  const handleSave = async () => {
+    if (!form.title || !form.thumbnail || !form.url) return;
+    await addTimelineEvent(form);
+    
+    // Attempt tracking but don't blow up if it fails
+    try { trackEvent('timeline_saved', { title: form.title }); } catch (e) {}
+
+    setForm({ title: '', date: '', url: '', description: '', thumbnail: '' });
+    setShowForm(false);
+    await refreshData();
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Delete this timeline event?")) {
+      await deleteTimelineEvent(id);
+      await refreshData();
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsCompressing(true);
+    try {
+      const base64 = await imageToCompressedBase64(file);
+      setForm(prev => ({ ...prev, thumbnail: base64 }));
+    } catch (err) {
+      alert('Failed to process image');
+    } finally {
+      setIsCompressing(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', margin: 0 }}>Timeline Events</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>{events.length} timeline memory items.</p>
+        </div>
+        <button onClick={() => { setForm({ title: '', date: '', url: '', description: '', thumbnail: '' }); setShowForm(!showForm); }} style={{
+          display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8,
+          background: showForm ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #d4af37, #ffd700)',
+          color: showForm ? '#fff' : '#000', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', border: 'none',
+        }}>
+          {showForm ? <X size={14} /> : <Plus size={14} />}
+          {showForm ? 'Close' : 'Add Event'}
+        </button>
+      </div>
+
+      {/* Editor Form */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            style={{ overflow: 'hidden', background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', padding: 24, marginBottom: 12 }}
+          >
+            <h3 style={{ marginTop: 0, marginBottom: 16, fontSize: '1rem', color: '#d4af37' }}>Add Timeline Item</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Title</label>
+                <input className="input-luxury" placeholder="e.g. Dhokariya Family Wedding" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Display Date</label>
+                <input className="input-luxury" placeholder="e.g. Mar 16, 2026" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Link URL (Instagram/YouTube/Facebook)</label>
+                <input className="input-luxury" placeholder="https://instagram.com/p/..." value={form.url} onChange={e => setForm({ ...form, url: e.target.value })} />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Description</label>
+                <textarea className="input-luxury" rows={3} placeholder="Tell the story behind this event..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ resize: 'vertical' }} />
+              </div>
+              {/* Photo Upload */}
+              <div style={{ gridColumn: 'span 2', background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
+                <label style={{ fontSize: '0.8rem', color: '#d4af37', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <Camera size={15} /> Thumbnail Photo
+                </label>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                  {form.thumbnail ? (
+                    <div style={{ position: 'relative', width: 96, height: 96, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <img src={form.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button onClick={() => setForm(prev => ({ ...prev, thumbnail: '' }))} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.7)', border: 'none', color: '#fff', borderRadius: '50%', padding: 4, cursor: 'pointer', display: 'flex' }}>
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ flex: 1 }}>
+                      <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isCompressing} style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }} />
+                      {isCompressing && <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: 8, display: 'block' }}>Compressing image…</span>}
+                      <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>Upload a single cover photo for this memory.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+              <button onClick={handleSave} disabled={isCompressing || !form.title || !form.thumbnail || !form.url || !form.date} style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10,
+                background: (!form.title || !form.thumbnail || !form.url || !form.date) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #d4af37, #ffd700)',
+                color: (!form.title || !form.thumbnail || !form.url || !form.date) ? 'rgba(255,255,255,0.3)' : '#000', 
+                fontWeight: 700, fontSize: '0.85rem', cursor: (!form.title || !form.thumbnail || !form.url || !form.date) ? 'not-allowed' : 'pointer', border: 'none',
+              }}>
+                <Save size={15} /> Publish to Timeline
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Events List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {events.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(255,255,255,0.3)' }}>No timeline events found.</div>
+        ) : events.map(ev => (
+          <div key={ev.id} style={{ display: 'flex', gap: 16, padding: 16, background: 'rgba(255,255,255,0.04)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ width: 80, height: 80, borderRadius: 8, overflow: 'hidden', background: '#111', flexShrink: 0 }}>
+              <img src={ev.thumbnail} alt={ev.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '1rem', color: '#fff', fontWeight: 600 }}>{ev.title}</h4>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#d4af37', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>{ev.date}</p>
+                </div>
+                <button onClick={() => handleDelete(ev.id)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', cursor: 'pointer', color: '#ef4444', borderRadius: 8, padding: 8, display: 'flex' }}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {ev.url}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Services Tab ─────────────────────────────────
 function ServicesTab({ services, refreshData }) {
   const [editing, setEditing] = useState(null);
@@ -828,7 +979,7 @@ function ServicesTab({ services, refreshData }) {
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    if (form.images.length + files.length > 4) { alert('Maximum 4 images allowed.'); return; }
+    if (form.images.length + files.length > 10) { alert('Maximum 10 images allowed.'); return; }
     setIsCompressing(true);
     try {
       const newImages = [];
@@ -997,6 +1148,7 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [leads, setLeads] = useState([]);
   const [services, setServices] = useState([]);
+  const [timeline, setTimeline] = useState([]);
   const [activity, setActivity] = useState([]);
   const [globalTraffic, setGlobalTraffic] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1007,17 +1159,20 @@ export default function Admin() {
       // Use individual try-catch to prevent one failure from blocking all data
       const fetchLeads = async () => { try { return await getLeads(); } catch(e) { console.error('Leads fail', e); return []; } };
       const fetchServices = async () => { try { return await getServices(); } catch(e) { console.error('Services fail', e); return []; } };
+      const fetchTimeline = async () => { try { return await getTimelineEvents(); } catch(e) { console.error('Timeline fail', e); return []; } };
       const fetchActivity = async () => { try { return await getActivityLog(); } catch(e) { console.error('Activity fail', e); return []; } };
       const fetchTraffic = async () => { try { return await getGlobalTrafficData(); } catch(e) { console.error('Traffic fail', e); return null; } };
 
-      const [l, s, a, t] = await Promise.all([
+      const [l, s, tl, a, t] = await Promise.all([
         fetchLeads(),
         fetchServices(),
+        fetchTimeline(),
         fetchActivity(),
         fetchTraffic(),
       ]);
       setLeads(l);
       setServices(s);
+      setTimeline(tl);
       setActivity(a);
       setGlobalTraffic(t);
     } catch (e) {
@@ -1051,6 +1206,7 @@ export default function Admin() {
       case 'traffic':   return <TrafficTab globalTraffic={globalTraffic} />;
       case 'security':  return <SecurityTab leads={leads} />;
       case 'activity':  return <ActivityTab log={activity} refreshData={refreshData} />;
+      case 'timeline':  return <TimelineTab events={timeline} refreshData={refreshData} />;
       case 'services':  return <ServicesTab services={services} refreshData={refreshData} />;
       default: return null;
     }

@@ -9,161 +9,8 @@ const cleanCaption = (text) => {
     .trim();
 };
 
-const WORK_TIMELINE = [
-  // MOST RECENT FIRST (Mar 2026)
-  {
-    url: 'https://www.instagram.com/p/DV8JuoiEzH5/',
-    title: 'Dhokariya Family Wedding',
-    date: 'Mar 16, 2026',
-    thumbnail: '/timeline/DV8JuoiEzH5.jpg',
-    description: 'Big ups to Dhokariya parivar @kartik_dhokariya for giving us the chance to plan their epic wedding! We\'ve been planning forever and totally rocked it! Next wedding, here we come!',
-    side: 'left',
-  },
-  // Feb 2026
-  {
-    url: 'https://www.instagram.com/p/DUustboEs22/',
-    title: 'We Don\'t Chase Perfection',
-    date: 'Feb 14, 2026',
-    thumbnail: '/timeline/DUustboEs22.jpg',
-    description: 'We don\'t chase perfection. We operate in it.',
-    side: 'right',
-  },
-  {
-    url: 'https://www.instagram.com/p/DUdw_JIDaf_/',
-    title: 'HB Dedgaonkar Family Event',
-    date: 'Feb 7, 2026',
-    thumbnail: '/timeline/DUdw_JIDaf.jpg',
-    description: 'Kudos to HB Dedgaonkar Family for a phenomenal event! Truly grateful for the opportunity, can\'t wait to work together again.',
-    side: 'left',
-  },
-  {
-    url: 'https://www.instagram.com/p/DUWUfa-jd4G/',
-    title: 'Different Venue, One Vision',
-    date: 'Feb 4, 2026',
-    thumbnail: '/timeline/DUWUfa-jd4G.jpg',
-    description: 'Different venue, one vision. Standing strong with the team, making magic happen. 2026 loading.',
-    side: 'right',
-  },
-  // Dec 2025
-  {
-    url: 'https://www.instagram.com/p/DSWzc2CDbPm/',
-    title: 'Elevating Events in Ahilyanagar',
-    date: 'Dec 17, 2025',
-    thumbnail: '/timeline/DSWzc2CDbPm.jpg',
-    description: 'Atithi Events: Elevating Events in Ahilyanagar with Exceptional Management Services.',
-    side: 'left',
-  },
-  {
-    url: 'https://www.instagram.com/p/DStlbTUEzBG/',
-    title: 'Wakode & Kakade Family Hospitality',
-    date: 'Dec 25, 2025',
-    thumbnail: '/timeline/DStlbTUEzBG.jpg',
-    description: 'Your trusted allies for unforgettable celebrations — Atithi Events, proudly serving the Wakode & Kakade family with our hospitality management in Ahilyanagar.',
-    side: 'right',
-  },
-  {
-    url: 'https://www.instagram.com/p/DSrOIwiCMMH/',
-    title: 'Carnival Event',
-    date: 'Dec 24, 2025',
-    thumbnail: '/timeline/DSrOIwiCMMH.jpg',
-    description: 'We\'re basically day-ruining ninjas — always alert and prepared for what comes next. Carnival Event Successfully managed & Coordinated.',
-    side: 'left',
-  },
-  {
-    url: 'https://www.instagram.com/p/DSo4buTE0LD/',
-    title: 'Pitale Parivar Event',
-    date: 'Dec 24, 2025',
-    thumbnail: '/timeline/DSo4buTE0LD.jpg',
-    description: 'Cheers to Pitale Parivar on an unforgettable event! We\'re honored to have been a part of it and can\'t wait for the next one!',
-    side: 'right',
-  },
-  // Sep 2025
-  {
-    url: 'https://www.instagram.com/p/DPIaZbBk-cK/',
-    title: 'Rass Garba Dandiya Night',
-    date: 'Sep 27, 2025',
-    thumbnail: '/timeline/DPIaZbBk-cK.jpg',
-    description: 'Rass Garba Dandiya Night Done Right.',
-    side: 'left',
-  },
-  // Aug 2025
-  {
-    url: 'https://www.instagram.com/p/DNXbnG9SLur/',
-    title: 'Let Us Handle the Details',
-    date: 'Aug 14, 2025',
-    thumbnail: '/timeline/DNXbnG9SLur.jpg',
-    description: 'Let us handle the details, so you can enjoy every moment!',
-    side: 'right',
-  },
-  {
-    url: 'https://www.instagram.com/p/DNXPhnizLyL/',
-    title: 'Crafting Experiences',
-    date: 'Aug 14, 2025',
-    thumbnail: '/timeline/DNXPhnizLyL.jpg',
-    description: 'Crafting experiences that speak louder than words.',
-    side: 'left',
-  },
-  {
-    url: 'https://www.instagram.com/p/DNWYwJdTWPn/',
-    title: 'Painted Town 2024',
-    date: 'Aug 14, 2025',
-    thumbnail: '/timeline/DNWYwJdTWPn.jpg',
-    description: 'Painted Town 2024 — colors, energy, and a celebration like no other.',
-    side: 'right',
-  },
-  {
-    url: 'https://www.instagram.com/p/DNWWbFXzKWO/',
-    title: 'Until Next Time',
-    date: 'Aug 14, 2025',
-    thumbnail: '/timeline/DNWWbFXzKWO.jpg',
-    description: 'Until next time — a memorable evening with our anchor @karan_kapoor_official.',
-    side: 'left',
-  },
-  // Jun 2025
-  {
-    url: 'https://www.instagram.com/p/DLbgIEDTEVI/',
-    title: 'Aditya & Sakshi Wedding',
-    date: 'Jun 24, 2025',
-    thumbnail: '/timeline/DLbgIEDTEVI.jpg',
-    description: 'Aditya & Sakshi tied the knot! Appreciative of the Chopda Family for letting us be a part of it.',
-    side: 'right',
-  },
-  {
-    url: 'https://www.instagram.com/p/DLWVbXCTggS/',
-    title: 'Royal Rajasthani Welcome',
-    date: 'Jun 24, 2025',
-    thumbnail: '/timeline/DLWVbXCTggS.jpg',
-    description: 'A Royal Rajasthani Welcome! Atithi Events brought the vibrant spirit of Rajasthan to life with a stunning red Rajasthani-themed décor — from majestic backdrops to elegant side drops.',
-    side: 'left',
-  },
-  // Dec 2024
-  {
-    url: 'https://www.instagram.com/p/DDjH5IQRQcB/',
-    title: 'Winning with Team',
-    date: 'Dec 13, 2024',
-    thumbnail: '/timeline/DDjH5IQRQcB.jpg',
-    description: 'Winning with team — 0 to 100, real quick.',
-    side: 'right',
-  },
-  // Feb 2024
-  {
-    url: 'https://www.instagram.com/p/C3wkd8MrDa2/',
-    title: 'Shweta & Munot Family Wedding',
-    date: 'Feb 25, 2024',
-    thumbnail: '/timeline/C3wkd8MrDa2.jpg',
-    description: 'Thank you Shweta and Munot Family for entrusting us with the opportunity to be your wedding planners. It was a pleasure bringing your vision to life. Wishing you endless joy!',
-    side: 'left',
-  },
-  // Jan 2025
-  {
-    url: 'https://www.instagram.com/p/DEXI57DsHMq/',
-    title: 'New Year, New Energy',
-    date: 'Jan 3, 2025',
-    thumbnail: '/timeline/DEXI57DsHMq.jpg',
-    description: 'My turn — 2k25 lets go! The journey of a thousand moments starts with a single spark. Bring it on.',
-    side: 'right',
-  },
-];
+import { useState, useEffect } from 'react';
+import { getTimelineEvents } from '../utils/timeline';
 
 // Google Reviews (sourced from Google Maps)
 const REVIEWS = [
@@ -194,10 +41,10 @@ const REVIEWS = [
 ];
 
 // Insert reviews every 3 posts
-const buildFeed = () => {
+const buildFeed = (events) => {
   const feed = [];
   let reviewIdx = 0;
-  WORK_TIMELINE.forEach((post, i) => {
+  events.forEach((post, i) => {
     feed.push({ type: 'post', data: post });
     if ((i + 1) % 3 === 0 && reviewIdx < REVIEWS.length) {
       feed.push({ type: 'review', data: REVIEWS[reviewIdx++] });
@@ -206,9 +53,31 @@ const buildFeed = () => {
   return feed;
 };
 
-const FEED = buildFeed();
-
 export default function Timeline() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getTimelineEvents().then(data => {
+      // Ensure alternating sides for UI layout
+      const formatted = data.map((ev, i) => ({
+        ...ev,
+        side: ev.side || (i % 2 === 0 ? 'left' : 'right')
+      }));
+      setEvents(formatted);
+      setLoading(false);
+    });
+  }, []);
+
+  const FEED = buildFeed(events);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 100 }}>
+        <p style={{ color: 'var(--accent-gold)' }}>Loading timeline...</p>
+      </div>
+    );
+  }
   return (
     <div style={{ minHeight: '100vh', paddingTop: 100 }}>
       <div className="section-container" style={{ maxWidth: 900 }}>
