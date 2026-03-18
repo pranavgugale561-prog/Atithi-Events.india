@@ -822,18 +822,31 @@ function TimelineTab({ events, refreshData }) {
           formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
-        // 2. Creative Title
+        // 2. Clean Description (Instagram meta stuff and hashtags)
+        let cleanDesc = json.data.description || '';
+        // Remove '1,200 likes, 40 comments - atithievents on March 16...' prefix
+        if (cleanDesc.match(/^[0-9,KMB]+\s+(likes|views|Play).*?-.*?:/is)) {
+          const parts = cleanDesc.split(':');
+          parts.shift(); // remove the prefix before the first colon
+          cleanDesc = parts.join(':').trim();
+        }
+        // Remove leading/trailing quotes often left by the prefix split
+        cleanDesc = cleanDesc.replace(/^["'\u201C\u2018]/, '').replace(/["'\u201D\u2019]$/, '').trim();
+        // Remove hashtags
+        cleanDesc = cleanDesc.replace(/#[\w\u0590-\u05ff]+/gi, '').replace(/\s+/g, ' ').trim();
+
+        // 3. Creative Title
         let fetchedTitle = json.data.title || '';
         if (fetchedTitle.toLowerCase().includes('instagram photo by') || fetchedTitle.toLowerCase().includes('instagram video by') || fetchedTitle === 'Instagram') {
-          const descLine = (json.data.description || '').split(/[.!?\n]/)[0].trim();
+          const descLine = cleanDesc.split(/[.!?\n]/)[0].trim();
           fetchedTitle = descLine || 'Timeline Memory';
         }
         
-        // 3. Assemble and Push
+        // 4. Assemble and Push
         const newEvent = {
           url: url,
           title: fetchedTitle,
-          description: json.data.description || '',
+          description: cleanDesc,
           thumbnail: (json.data.image && json.data.image.url) || '',
           date: formattedDate
         };
