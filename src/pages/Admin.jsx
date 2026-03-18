@@ -823,9 +823,15 @@ function TimelineTab({ events, refreshData }) {
           formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
+        let fetchedTitle = json.data.title || '';
+        // If Instagram gives a generic title, clear it so the user can type a proper one like 'Dhokariya Family Wedding'
+        if (fetchedTitle.toLowerCase().includes('instagram photo by') || fetchedTitle.toLowerCase().includes('instagram video by') || fetchedTitle === 'Instagram') {
+          fetchedTitle = '';
+        }
+
         setForm(prev => ({
           ...prev,
-          title: prev.title || json.data.title || '',
+          title: prev.title || fetchedTitle,
           description: prev.description || json.data.description || '',
           thumbnail: prev.thumbnail || (json.data.image && json.data.image.url) || '',
           date: prev.date || formattedDate,

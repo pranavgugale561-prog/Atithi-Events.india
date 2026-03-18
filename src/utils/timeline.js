@@ -10,29 +10,26 @@ export async function getTimelineEvents() {
     const db = await getDB();
     if (!db) return [];
 
-    const { collection, getDocs, query, orderBy } = await import('firebase/firestore');
+    const { collection, getDocs } = await import('firebase/firestore');
     const coll = collection(db, 'timeline');
     
     try {
-      // First try to fetch sorted by date (newest first)
-      const q = query(coll, orderBy('date', 'desc'));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-    } catch (indexError) {
-      console.warn('[Timeline] Sorted fetch failed, falling back to unsorted fetch:', indexError.message);
-      // Fallback: Fetch everything and sort in JS
+      // Fetch everything and sort in JS
+      // Simple string comparison for 'Jan 24, 2025' style dates won't work perfectly in Firestore,
+      // but Date.parse handles standard strings perfectly
       const snapshot = await getDocs(coll);
       const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       return data.sort((a, b) => {
-        // Simple string comparison for 'Jan 24, 2025' style dates won't work perfectly,
-        // but Date.parse handles standard strings well enough for fallback
         const da = Date.parse(a.date) || 0;
         const dbTime = Date.parse(b.date) || 0;
         return dbTime - da;
       });
+    } catch (error) {
+      console.error('[Timeline] Fetch failed:', error.message);
+      return [];
     }
   } catch (error) {
-    console.error('[Timeline] Fetch failed:', error.message);
+    console.error('[Timeline] Initialization failed:', error.message);
     return [];
   }
 }
