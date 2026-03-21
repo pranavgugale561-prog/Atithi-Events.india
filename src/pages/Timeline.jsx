@@ -10,6 +10,7 @@ const cleanCaption = (text) => {
 };
 
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getTimelineEvents } from '../utils/timeline';
 
 // Google Reviews (sourced from Google Maps)
@@ -336,6 +337,46 @@ export default function Timeline() {
           }
         }
       `}</style>
+
+      {/* Footer Navigation Button */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 20,
+          padding: '40px 24px 120px', // Extra bottom padding for mobile nav clearance
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 5
+        }}
+      >
+        <div style={{ width: 40, height: 1, background: 'var(--accent-gold)', opacity: 0.3, marginBottom: 20 }} />
+        <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: 4 }}>
+          Wait, there's more magic!
+        </h3>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 24 }}>
+          Ready to plan your own masterpiece?
+        </p>
+        <Link 
+          to="/" 
+          className="btn-squishy"
+          style={{ 
+            padding: '12px 32px', 
+            fontSize: '0.9rem',
+            background: 'var(--accent-gold)',
+            color: '#000',
+            textDecoration: 'none',
+            borderRadius: '30px',
+            fontWeight: 700
+          }}
+        >
+          Back to Home
+        </Link>
+      </motion.div>
     </div>
   );
 }

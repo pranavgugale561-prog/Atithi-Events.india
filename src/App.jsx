@@ -27,6 +27,7 @@ import EventClasses from './pages/EventClasses';
 import CateringPRO from './pages/CateringPRO';
 import AboutContact from './pages/AboutContact';
 import ErrorBoundary from './components/ErrorBoundary';
+import BackgroundMusic from './components/BackgroundMusic';
 
 function AppRoutes() {
   const location = useLocation();
@@ -47,6 +48,7 @@ function AppRoutes() {
       <CustomCursor />
       <GoldenDustBackground />
       <PageTransitionLoader />
+      {!isAdmin && <BackgroundMusic />}
       {!isAdmin && <GoldenButterfly />}
       {!isAdmin && <Navbar />}
       <Routes location={location} key={location.pathname}>

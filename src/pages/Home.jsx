@@ -59,8 +59,8 @@ export default function Home() {
               cursor: 'pointer'
             }}
           >
-            <h2 className="section-title" style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Time</h2>
-            <p className="section-subtitle" style={{ marginBottom: 0 }}>Step-by-step journey of your celebration →</p>
+            <h2 className="section-title" style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Our Journey</h2>
+            <p className="section-subtitle" style={{ marginBottom: 0 }}>Step-by-step chronology of your celebration →</p>
           </motion.div>
         </Link>
       </section>
