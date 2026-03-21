@@ -44,7 +44,7 @@ export default function AboutContact() {
           <div className="glass" style={{ padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--accent-gold)' }}>
             <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.2rem', color: '#fff', marginBottom: '1.5rem' }}>Meet the Vision</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-              <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-gold), var(--accent-coral))', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: '#fff' }}>
+              <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-gold), var(--accent-coral))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                 <Sparkles size={30} style={{ margin: '0 auto' }} />
               </div>
               <div>
