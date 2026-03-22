@@ -114,13 +114,12 @@ export default function Loader({ onComplete }) {
 
     const finish = () => {
       cancelAnimationFrame(animationFrame);
-      setIsVisible(false);
-      sessionStorage.setItem('atithi_loaded', 'true');
-      onComplete?.();
+      setIsReady(true);
+      // We wait for the "Begin Experience" click to call setIsVisible(false)
     };
 
-    // Hard safety timeout — if rAF ever stalls, site still appears after 8s
-    const safetyTimeout = setTimeout(finish, 8000);
+    // Safety timeout — if rAF stalls, still show Enter button after 6s
+    const safetyTimeout = setTimeout(finish, 6000);
 
     const updateProgress = (currentTime) => {
       const elapsed = currentTime - startTime;
@@ -164,7 +163,7 @@ export default function Loader({ onComplete }) {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, filter: 'blur(8px)', scale: 1.08 }}
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-          style={{ flexDirection: 'column' }}
+          style={{ flexDirection: 'column', zIndex: 1000000 }}
         >
           <GoldenParticles />
 

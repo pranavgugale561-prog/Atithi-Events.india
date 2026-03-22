@@ -58,9 +58,9 @@ export default function BackgroundMusic() {
       <div 
         style={{
           position: 'fixed',
-          bottom: '100px', // Above mobile nav
-          right: '20px',
-          zIndex: 9999,
+          bottom: '180px', // High enough to clear everything
+          right: '24px',
+          zIndex: 9995, // Below Loader
         }}
       >
         <motion.button
