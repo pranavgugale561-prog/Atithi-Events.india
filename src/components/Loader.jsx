@@ -366,13 +366,13 @@ export default function Loader({ onComplete }) {
                 whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(212,175,55,0.4)' }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
-                  // The audio listener in BackgroundMusic.jsx will catch this click!
-                  const finish = () => {
-                    setIsVisible(false);
-                    sessionStorage.setItem('atithi_loaded', 'true');
+                  console.log("Begin Experience Clicked!");
+                  setIsVisible(false);
+                  sessionStorage.setItem('atithi_loaded', 'true');
+                  // Give it a tiny moment to start the exit animation before bubbling up
+                  setTimeout(() => {
                     onComplete?.();
-                  };
-                  finish();
+                  }, 50);
                 }}
                 className="btn-squishy"
                 style={{

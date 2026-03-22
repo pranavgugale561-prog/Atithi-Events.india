@@ -58,9 +58,9 @@ export default function BackgroundMusic() {
       <div 
         style={{
           position: 'fixed',
-          bottom: '180px', // High enough to clear everything
-          right: '24px',
-          zIndex: 9995, // Below Loader
+          bottom: '40px', // Safe from Chat/Cart
+          left: '40px',   // Complete separation
+          zIndex: 9995,
         }}
       >
         <motion.button
