@@ -163,7 +163,21 @@ export default function Loader({ onComplete }) {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, filter: 'blur(8px)', scale: 1.08 }}
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-          style={{ flexDirection: 'column', zIndex: 1000000 }}
+          style={{ 
+            flexDirection: 'column', 
+            zIndex: 1000000,
+            cursor: isReady ? 'pointer' : 'default' 
+          }}
+          onClick={() => {
+            if (isReady) {
+              console.log("Overlay Clicked! Clearing Loader...");
+              setIsVisible(false);
+              sessionStorage.setItem('atithi_loaded', 'true');
+              setTimeout(() => {
+                onComplete?.();
+              }, 50);
+            }
+          }}
         >
           <GoldenParticles />
 
