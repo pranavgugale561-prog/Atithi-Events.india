@@ -90,6 +90,15 @@ export default function Loader({ onComplete }) {
   const [isVisible, setIsVisible] = useState(true);
   const [hasShown, setHasShown] = useState(false);
   const [taglineIdx, setTaglineIdx] = useState(0);
+  const [isReady, setIsReady] = useState(false);
+  const [showEnter, setShowEnter] = useState(false);
+
+  useEffect(() => {
+    if (isReady) {
+      const timer = setTimeout(() => setShowEnter(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [isReady]);
 
   useEffect(() => {
     if (sessionStorage.getItem('atithi_loaded')) {
@@ -121,10 +130,11 @@ export default function Loader({ onComplete }) {
       if (elapsed < progressDuration) {
         animationFrame = requestAnimationFrame(updateProgress);
       } else {
-        setTimeout(() => {
-          clearTimeout(safetyTimeout);
-          finish();
-        }, 600);
+        // Instead of automatic finish, we'll wait for user or just a tiny delay
+        // But for "Automatic Music", we need a CLICK.
+        // So we transition to a "Ready" state.
+        setIsReady(true);
+        clearTimeout(safetyTimeout);
       }
     };
 
@@ -308,40 +318,82 @@ export default function Loader({ onComplete }) {
           </div>
 
           {/* Progress bar */}
-          <div style={{
-            width: 200,
-            height: 2,
-            background: 'rgba(212,175,55,0.1)',
-            borderRadius: 2,
-            overflow: 'hidden',
-            marginTop: 24,
-          }}>
-            <motion.div
-              style={{
-                height: '100%',
-                background: 'linear-gradient(90deg, var(--accent-gold), #ffd700, var(--accent-gold))',
-                borderRadius: 2,
-                width: `${progress}%`,
-                boxShadow: '0 0 10px rgba(212,175,55,0.5)',
-              }}
-            />
-          </div>
-
-          {/* Percentage */}
-          <motion.p
-            style={{
-              fontSize: '0.7rem',
-              color: 'var(--text-muted)',
-              fontVariantNumeric: 'tabular-nums',
-              marginTop: 10,
-              fontFamily: "'Inter', sans-serif",
-              letterSpacing: '0.05em',
-            }}
-            animate={{ opacity: [0.4, 1] }}
-            transition={{ duration: 1.2, repeat: Infinity, repeatType: 'reverse' }}
-          >
-            {Math.round(progress)}%
-          </motion.p>
+          <AnimatePresence mode="wait">
+            {!showEnter ? (
+              <motion.div
+                key="progress"
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+              >
+                <div style={{
+                  width: 200,
+                  height: 2,
+                  background: 'rgba(212,175,55,0.1)',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  marginTop: 24,
+                }}>
+                  <motion.div
+                    style={{
+                      height: '100%',
+                      background: 'linear-gradient(90deg, var(--accent-gold), #ffd700, var(--accent-gold))',
+                      borderRadius: 2,
+                      width: `${progress}%`,
+                      boxShadow: '0 0 10px rgba(212,175,55,0.5)',
+                    }}
+                  />
+                </div>
+                <motion.p
+                  style={{
+                    fontSize: '0.7rem',
+                    color: 'var(--text-muted)',
+                    fontVariantNumeric: 'tabular-nums',
+                    marginTop: 10,
+                    fontFamily: "'Inter', sans-serif",
+                    letterSpacing: '0.05em',
+                  }}
+                  animate={{ opacity: [0.4, 1] }}
+                  transition={{ duration: 1.2, repeat: Infinity, repeatType: 'reverse' }}
+                >
+                  {Math.round(progress)}%
+                </motion.p>
+              </motion.div>
+            ) : (
+              <motion.button
+                key="enter"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(212,175,55,0.4)' }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  // The audio listener in BackgroundMusic.jsx will catch this click!
+                  const finish = () => {
+                    setIsVisible(false);
+                    sessionStorage.setItem('atithi_loaded', 'true');
+                    onComplete?.();
+                  };
+                  finish();
+                }}
+                className="btn-squishy"
+                style={{
+                  marginTop: 24,
+                  padding: '12px 36px',
+                  fontSize: '0.9rem',
+                  background: 'var(--accent-gold)',
+                  color: '#000',
+                  borderRadius: '30px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Begin Experience
+              </motion.button>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>
