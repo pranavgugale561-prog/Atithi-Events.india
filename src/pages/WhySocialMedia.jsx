@@ -10,7 +10,7 @@ export default function WhySocialMedia() {
   ];
 
   return (
-    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto min-h-screen">
+    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}

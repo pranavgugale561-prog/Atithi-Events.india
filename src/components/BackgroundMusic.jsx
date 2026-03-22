@@ -58,8 +58,8 @@ export default function BackgroundMusic() {
       <div 
         style={{
           position: 'fixed',
-          bottom: '40px', // Safe from Chat/Cart
-          left: '40px',   // Complete separation
+          bottom: '100px', // Above mobile nav
+          left: '24px',   // Safe on left side
           zIndex: 9995,
         }}
       >

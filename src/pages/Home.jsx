@@ -77,7 +77,7 @@ export default function Home() {
         textAlign: 'center',
         padding: '48px 24px 32px',
         borderTop: '1px solid var(--glass-border)',
-        marginTop: 48,
+        marginTop: 20,
       }}>
         <h3 style={{
           fontFamily: "'Cormorant Garamond', serif",

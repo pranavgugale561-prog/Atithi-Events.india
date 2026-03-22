@@ -8,7 +8,10 @@ export default function AboutContact() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setFormState('sending');
-    setTimeout(() => setFormState('sent'), 1500);
+    setTimeout(() => {
+      setFormState('sent');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 1500);
   };
 
   const socialLinks = [

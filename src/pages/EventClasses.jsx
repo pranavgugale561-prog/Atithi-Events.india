@@ -41,7 +41,7 @@ export default function EventClasses() {
   };
 
   return (
-    <div className="page-container" style={{ paddingBottom: 120 }}>
+    <div className="page-container" style={{ paddingBottom: 60 }}>
       {/* Hero Section */}
       <section style={{ paddingTop: '140px', paddingBottom: '60px', textAlign: 'center', padding: '140px 24px 60px' }}>
         <motion.div

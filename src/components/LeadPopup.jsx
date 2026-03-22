@@ -31,6 +31,7 @@ export default function LeadPopup() {
       setSubmitted(true);
       setTimeout(() => {
         setIsVisible(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 2500);
     } catch (error) {
       console.error('[LeadPopup] Submission failed:', error);
