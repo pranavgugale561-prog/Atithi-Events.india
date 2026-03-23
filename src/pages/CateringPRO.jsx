@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ChefHat, Users, GlassWater, Crown, Sparkles, Star } from 'lucide-react';
+import Footer from '../components/Footer';
 
 export default function CateringPRO() {
   const features = [
@@ -26,11 +27,11 @@ export default function CateringPRO() {
   ];
 
   return (
-    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto min-h-screen">
+    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto">
       {/* Header Section */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20, opacity: 1 }}
+        animate={{ y: 0 }}
         className="text-center mb-16"
       >
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.9rem', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
@@ -113,6 +114,7 @@ export default function CateringPRO() {
           Our catering management isn't just about serving food; it's about choreographing a culinary experience. Paired with our trained PRO Girls who manage VVIPs, navigate crowds, and ensure smooth table hosting, your event transforms into an elite, stress-free celebration.
         </p>
       </motion.div>
+      <Footer />
     </div>
   );
 }

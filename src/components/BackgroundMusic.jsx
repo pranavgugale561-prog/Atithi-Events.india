@@ -8,20 +8,25 @@ export default function BackgroundMusic() {
   const [hasInteracted, setHasInteracted] = useState(false);
   const audioRef = useRef(null);
 
-  // 1. Handle browser Autoplay policy
+  // 1. Attempt to play on mount (since loader interaction unlocks audio)
   useEffect(() => {
-    const handleFirstInteraction = () => {
-      if (!hasInteracted) {
-        setHasInteracted(true);
-        // Try to play on first interaction
-        if (audioRef.current) {
-          audioRef.current.play().then(() => {
-            setIsPlaying(true);
-          }).catch(err => {
-            console.warn("Autoplay still blocked:", err);
-          });
-        }
+    const playAudio = () => {
+      if (audioRef.current) {
+        audioRef.current.play().then(() => {
+          setIsPlaying(true);
+          setHasInteracted(true);
+        }).catch(err => {
+          console.warn("[BackgroundMusic] Autoplay blocked, waiting for interaction:", err);
+        });
       }
+    };
+
+    // Try immediately
+    playAudio();
+
+    // Also keep listeners as fallback
+    const handleFirstInteraction = () => {
+      if (!isPlaying) playAudio();
     };
 
     window.addEventListener('click', handleFirstInteraction, { once: true });
@@ -33,7 +38,7 @@ export default function BackgroundMusic() {
       window.removeEventListener('scroll', handleFirstInteraction);
       window.removeEventListener('touchstart', handleFirstInteraction);
     };
-  }, [hasInteracted]);
+  }, [isPlaying]);
 
   const togglePlay = () => {
     if (audioRef.current) {

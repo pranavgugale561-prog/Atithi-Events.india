@@ -31,7 +31,7 @@ export default function LeadPopup() {
       setSubmitted(true);
       setTimeout(() => {
         setIsVisible(false);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo(0, 0); // Instant reset to Hero
       }, 2500);
     } catch (error) {
       console.error('[LeadPopup] Submission failed:', error);

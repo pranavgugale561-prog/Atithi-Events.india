@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Footer from '../components/Footer';
 import {
   Calculator, Target, MonitorPlay, Receipt, UtensilsCrossed, Monitor, ShieldAlert,
   Globe2, Landmark, GraduationCap, MessagesSquare, Scale, Users, FileQuestion, Sparkles, Send
@@ -43,10 +44,10 @@ export default function EventClasses() {
   return (
     <div className="page-container" style={{ paddingBottom: 60 }}>
       {/* Hero Section */}
-      <section style={{ paddingTop: '140px', paddingBottom: '60px', textAlign: 'center', padding: '140px 24px 60px' }}>
+      <section style={{ paddingTop: '140px', paddingBottom: '60px', textAlign: 'center' }}>
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 20, opacity: 1 }}
+          animate={{ y: 0 }}
           transition={{ duration: 0.8 }}
           style={{ maxWidth: 800, margin: '0 auto' }}
         >
@@ -257,6 +258,7 @@ export default function EventClasses() {
           </form>
         </motion.div>
       </section>
+      <Footer />
     </div>
   );
 }

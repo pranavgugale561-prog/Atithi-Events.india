@@ -47,11 +47,10 @@ function AppRoutes() {
     <ErrorBoundary>
       <CustomCursor />
       <GoldenDustBackground />
-      <PageTransitionLoader />
       {!isAdmin && <BackgroundMusic />}
       {!isAdmin && <GoldenButterfly />}
       {!isAdmin && <Navbar />}
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location}>
         <Route path="/" element={<Home />} />
         <Route path="/timeline" element={<Timeline />} />
         <Route path="/why-planner" element={<WhyPlanner />} />

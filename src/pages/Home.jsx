@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Hero from '../components/Hero';
 import ServiceSection from '../components/ServiceSection';
 import MoodBoard from '../components/MoodBoard';
+import Footer from '../components/Footer';
 
 function DiscoverSection() {
   const features = [
@@ -46,21 +47,22 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <section id="timeline">
+      <section id="timeline" style={{ position: 'relative', zIndex: 10 }}>
         <Link to="/timeline" style={{ textDecoration: 'none' }}>
           <motion.div 
             whileHover={{ scale: 1.01 }}
             className="glass" 
             style={{ 
-              margin: '2rem 24px', 
-              padding: '3rem', 
+              margin: '1rem 24px', 
+              padding: '2.5rem', 
               textAlign: 'center',
               border: '1px solid var(--accent-gold)',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              opacity: 1
             }}
           >
-            <h2 className="section-title" style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Our Journey</h2>
-            <p className="section-subtitle" style={{ marginBottom: 0 }}>Step-by-step chronology of your celebration →</p>
+            <h2 className="section-title" style={{ fontSize: '2.2rem', marginBottom: '0.8rem' }}>Our Journey</h2>
+            <p className="section-subtitle" style={{ marginBottom: 0, fontSize: '0.95rem' }}>Step-by-step chronology of your celebration →</p>
           </motion.div>
         </Link>
       </section>
@@ -72,46 +74,7 @@ export default function Home() {
         <MoodBoard />
       </div>
 
-      {/* Footer */}
-      <footer style={{
-        textAlign: 'center',
-        padding: '48px 24px 32px',
-        borderTop: '1px solid var(--glass-border)',
-        marginTop: 20,
-      }}>
-        <h3 style={{
-          fontFamily: "'Cormorant Garamond', serif",
-          fontSize: '1.6rem',
-          color: 'var(--text-primary)',
-          marginBottom: 8,
-          fontWeight: 400,
-        }}>
-          Atithi Events
-        </h3>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
-          Where every celebration becomes a masterpiece.
-        </p>
-        <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginBottom: 20 }}>
-          {['Instagram', 'Pinterest', 'WhatsApp', 'Email'].map(link => (
-            <a
-              key={link}
-              href="#"
-              style={{
-                fontSize: '0.8rem',
-                color: 'var(--text-secondary)',
-                transition: 'color 0.3s',
-              }}
-              onMouseEnter={e => e.target.style.color = 'var(--accent-coral)'}
-              onMouseLeave={e => e.target.style.color = 'var(--text-secondary)'}
-            >
-              {link}
-            </a>
-          ))}
-        </div>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          © 2026 Atithi Events. Crafted with love.
-        </p>
-      </footer>
+      <Footer />
     </>
   );
 }

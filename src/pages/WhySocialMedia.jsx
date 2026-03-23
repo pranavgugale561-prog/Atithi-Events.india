@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import Footer from '../components/Footer';
 
 export default function WhySocialMedia() {
   const valueProps = [
@@ -12,8 +13,8 @@ export default function WhySocialMedia() {
   return (
     <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto">
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20, opacity: 1 }}
+        animate={{ y: 0 }}
         className="text-center mb-16"
       >
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.9rem', textTransform: 'uppercase' }}>
@@ -77,6 +78,7 @@ export default function WhySocialMedia() {
           Explore Services
         </a>
       </motion.div>
+      <Footer />
     </div>
   );
 }

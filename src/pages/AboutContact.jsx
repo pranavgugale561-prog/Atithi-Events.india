@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Instagram, MessageCircle, Send, Heart, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import Footer from '../components/Footer';
 
 export default function AboutContact() {
   const [formState, setFormState] = useState('idle');
@@ -10,7 +11,7 @@ export default function AboutContact() {
     setFormState('sending');
     setTimeout(() => {
       setFormState('sent');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0); // Instant reset to Hero
     }, 1500);
   };
 
@@ -21,11 +22,11 @@ export default function AboutContact() {
   ];
 
   return (
-    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto min-h-screen">
+    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto">
       {/* 1. Hero: Our Story */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20, opacity: 1 }}
+        animate={{ y: 0 }}
         className="text-center mb-20"
       >
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.15em', fontSize: '0.9rem', textTransform: 'uppercase' }}>
@@ -197,6 +198,7 @@ export default function AboutContact() {
           <span>Open Studio Location in Google Maps</span>
         </a>
       </motion.div>
+      <Footer />
     </div>
   );
 }
