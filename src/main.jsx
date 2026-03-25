@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.jsx'
 
 // ── Global error capture: surface silent crashes on screen ──────────────────
-// Build: 2024-03-22-02-30
+// Build: 2026-03-26-00-50 (Antigravity Update)
 function showError(msg) {
   document.getElementById('root').innerHTML = `
     <div style="min-height:100vh;background:#0a0a0a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;font-family:monospace;text-align:center">
