@@ -26,6 +26,7 @@ import WhySocialMedia from './pages/WhySocialMedia';
 import EventClasses from './pages/EventClasses';
 import CateringPRO from './pages/CateringPRO';
 import AboutContact from './pages/AboutContact';
+import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
 import BackgroundMusic from './components/BackgroundMusic';
 
@@ -56,11 +57,15 @@ function AppRoutes() {
         <Route path="/why-planner" element={<WhyPlanner />} />
         <Route path="/photography" element={<Photography />} />
         <Route path="/why-social-media" element={<WhySocialMedia />} />
+        <Route path="/shaadi-bts" element={<WhySocialMedia />} />
         <Route path="/classes" element={<EventClasses />} />
+        <Route path="/academy" element={<EventClasses />} />
         <Route path="/catering-pro" element={<CateringPRO />} />
         <Route path="/contact" element={<AboutContact />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<Admin />} />
+        {/* Catch-all 404 Route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {!isAdmin && <MobileNav />}
       {!isAdmin && <CartButton />}

@@ -8,8 +8,8 @@ import Footer from '../components/Footer';
 function DiscoverSection() {
   const features = [
     { title: 'Cinematic Photography', desc: 'Explore our cinematic wedding films, drone shoots, and candid memories.', link: '/photography', img: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=600&auto=format&fit=crop' },
-    { title: 'Shaadi BTS & Social Media', desc: 'Instant viral reels and raw, unfiltered joy straight to your feed.', link: '/why-social-media', img: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=600&auto=format&fit=crop' },
-    { title: 'The Event Academy', desc: 'Join our professional event planning and management masterclasses.', link: '/classes', img: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=600&auto=format&fit=crop' },
+    { title: 'Shaadi BTS & Social Media', desc: 'Instant viral reels and raw, unfiltered joy straight to your feed.', link: '/shaadi-bts', img: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=600&auto=format&fit=crop' },
+    { title: 'The Event Academy', desc: 'Join our professional event planning and management masterclasses.', link: '/academy', img: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=600&auto=format&fit=crop' },
     { title: 'Why Hire a Planner?', desc: 'Discover how we turn chaos into a seamless, stress-free celebration.', link: '/why-planner', img: 'https://images.unsplash.com/photo-1543329729-eb741005ca65?q=80&w=600&auto=format&fit=crop' },
   ];
 

@@ -68,6 +68,21 @@ export default function EventClasses() {
             </span>
           </div>
           
+          <div style={{
+            marginBottom: '1.5rem',
+            display: 'inline-block',
+            padding: '6px 14px',
+            background: 'rgba(212,175,55,0.1)',
+            border: '1px solid rgba(212,175,55,0.2)',
+            borderRadius: '8px',
+            color: 'var(--accent-gold)',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            textTransform: 'uppercase'
+          }}>
+            Next Batch: April 2026
+          </div>
+          
           <h1 style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
@@ -144,6 +159,12 @@ export default function EventClasses() {
               }}>
                 {mod.title}
               </h3>
+              <div style={{
+                width: '100%',
+                height: '1px',
+                background: 'linear-gradient(to right, rgba(212,175,55,0.2), transparent)',
+                marginTop: 'auto'
+              }}></div>
             </motion.div>
           ))}
         </div>

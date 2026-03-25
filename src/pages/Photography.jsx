@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
+import { Camera, Film, Wind, Heart, Star, Sparkles, ChevronRight } from 'lucide-react';
 import Footer from '../components/Footer';
+import BackgroundMusic from '../components/BackgroundMusic';
 
 export default function Photography() {
   const services = [
@@ -53,23 +55,75 @@ export default function Photography() {
         ))}
       </div>
       
-      {/* Placeholder for Photo Gallery */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        className="glass"
-        style={{ borderRadius: '24px', padding: '4rem 2rem', textAlign: 'center', border: '1px dashed var(--accent-gold)' }}
-      >
-        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '1rem' }}>
-          Portfolio Showcase
-        </h2>
-        <p style={{ color: 'var(--text-muted)' }}>
-          "Photographs are a return ticket to a moment otherwise gone."
-        </p>
-        <div style={{ marginTop: '2rem', color: 'var(--accent-gold)' }}>
-          [ Client Galleries & Drone Footage Reels Will Be Displayed Here ]
+      {/* Professional Gallery Showcase */}
+      <div className="mb-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '1rem' }}>
+            Portfolio Showcase
+          </h2>
+          <div style={{ width: '60px', height: '2px', background: 'var(--accent-gold)', margin: '0 auto' }}></div>
+        </motion.div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+          gap: '1.5rem',
+        }}>
+          {[
+            { img: '/assets/photography/shot1.png', title: 'Golden Hour Portraits', category: 'Candid' },
+            { img: '/assets/photography/shot2.png', title: 'Emotional Noir', category: 'Black & White' },
+            { img: '/assets/photography/shot3.png', title: 'Grand Venue Vistas', category: 'Drone' }
+          ].map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="glass"
+              style={{ padding: '0.8rem', borderRadius: '20px', overflow: 'hidden' }}
+            >
+              <div style={{ 
+                height: '400px', 
+                borderRadius: '14px', 
+                overflow: 'hidden', 
+                position: 'relative' 
+              }}>
+                <img 
+                  src={item.img} 
+                  alt={item.title} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-end',
+                  padding: '1.5rem',
+                  opacity: 0,
+                  transition: 'opacity 0.3s'
+                }}
+                className="gallery-overlay"
+                >
+                  <span style={{ color: 'var(--accent-gold)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{item.category}</span>
+                  <h4 style={{ color: '#fff', fontSize: '1.2rem', margin: '0.3rem 0', fontFamily: "'Cormorant Garamond', serif" }}>{item.title}</h4>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
-      </motion.div>
+      </div>
+
+      <style>{`
+        .glass:hover .gallery-overlay { opacity: 1 !important; }
+      `}</style>
       <Footer />
     </div>
   );

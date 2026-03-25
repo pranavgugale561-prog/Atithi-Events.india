@@ -13,9 +13,9 @@ const primaryLinks = [
 ];
 
 const moreLinks = [
-  { label: 'Shaadi BTS', to: '/why-social-media' },
+  { label: 'Shaadi BTS', to: '/shaadi-bts' },
   { label: 'Why Planner?', to: '/why-planner' },
-  { label: 'Academy', to: '/classes' },
+  { label: 'Academy', to: '/academy' },
   { label: 'Mood Board', to: '/#mood-board' },
 ];
 

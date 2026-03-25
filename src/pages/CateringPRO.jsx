@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ChefHat, Users, GlassWater, Crown, Sparkles, Star } from 'lucide-react';
+import { ChefHat, Users, GlassWater, Crown, Sparkles, Star, CheckCircle2, ShieldCheck, Heart } from 'lucide-react';
 import Footer from '../components/Footer';
 
 export default function CateringPRO() {
@@ -103,7 +103,8 @@ export default function CateringPRO() {
           border: '1px solid rgba(212,175,55,0.3)',
           background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(212,175,55,0.02) 100%)',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          marginBottom: '5rem'
         }}
       >
         <Sparkles size={40} color="var(--accent-gold)" style={{ margin: '0 auto 1.5rem', opacity: 0.5 }} />
@@ -114,6 +115,36 @@ export default function CateringPRO() {
           Our catering management isn't just about serving food; it's about choreographing a culinary experience. Paired with our trained PRO Girls who manage VVIPs, navigate crowds, and ensure smooth table hosting, your event transforms into an elite, stress-free celebration.
         </p>
       </motion.div>
+
+      {/* Service Standards */}
+      <div style={{ marginBottom: '5rem' }}>
+        <h2 className="section-title text-center mb-12" style={{ fontSize: '2rem' }}>Our Standards of Excellence</h2>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '1.5rem' 
+        }}>
+          {[
+            { icon: CheckCircle2, title: 'Hygiene First', desc: 'Strict adherence to premium health and safety protocols.' },
+            { icon: ShieldCheck, title: 'Trained Staff', desc: 'All PRO girls and servers undergo rigorous hospitality training.' },
+            { icon: Heart, title: 'Personalized Care', desc: 'Anticipating guest needs before they even ask.' }
+          ].map((std, i) => (
+            <motion.div
+              key={i}
+              className="glass"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              style={{ padding: '1.5rem', borderRadius: '16px', display: 'flex', gap: '1rem', alignItems: 'center' }}
+            >
+              <std.icon size={24} color="var(--accent-gold)" />
+              <div>
+                <h4 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '0.2rem' }}>{std.title}</h4>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{std.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
       <Footer />
     </div>
   );

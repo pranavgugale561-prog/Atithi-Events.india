@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Smartphone, Instagram, Send, Sparkles, Play } from 'lucide-react';
 import Footer from '../components/Footer';
 
 export default function WhySocialMedia() {
@@ -53,10 +54,78 @@ export default function WhySocialMedia() {
         ))}
       </div>
       
+      {/* Reel Showcase Placeholder */}
+      <div className="mt-24 mb-24">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="glass flex flex-col md:flex-row items-center gap-12"
+          style={{ borderRadius: '32px', padding: '4rem 2rem', border: '1px solid rgba(212,175,55,0.2)' }}
+        >
+          {/* Phone Frame Mockup */}
+          <div style={{
+            width: '280px',
+            height: '560px',
+            background: '#000',
+            borderRadius: '40px',
+            border: '8px solid #1a1a1a',
+            position: 'relative',
+            overflow: 'hidden',
+            flexShrink: 0,
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+          }}>
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(45deg, #121212, #2a2a2a)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Play size={48} color="var(--accent-gold)" />
+            </div>
+            <div style={{
+              position: 'absolute',
+              bottom: '20px',
+              left: '20px',
+              right: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ width: '60%', height: '8px', background: 'rgba(255,255,255,0.2)', borderRadius: '4px' }}></div>
+              <div style={{ width: '40%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}></div>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>
+              From Camera to Feed in 24 Hours
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', lineHeight: 1.7, marginBottom: '2rem' }}>
+              We don't just record; we curate. Our on-site editors turn raw moments into viral-ready reels before your Sangeet even ends. No more waiting months to share your joy.
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {[
+                { icon: Smartphone, text: 'iPhone 15 Pro Max / 16 Pro Shoots' },
+                { icon: Instagram, text: 'Custom Trending Audio Curation' },
+                { icon: Send, text: 'Instant WhatsApp Previews' }
+              ].map((item, i) => (
+                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--accent-gold)', fontWeight: 500 }}>
+                  <item.icon size={20} />
+                  {item.text}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </motion.div>
+      </div>
+
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
-        className="mt-24 flex flex-col items-center justify-center glass py-16 px-8"
+        className="flex flex-col items-center justify-center glass py-16 px-8"
         style={{ borderRadius: '32px', textAlign: 'center' }}
       >
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
