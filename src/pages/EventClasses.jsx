@@ -46,8 +46,8 @@ export default function EventClasses() {
       {/* Hero Section */}
       <section style={{ paddingTop: '140px', paddingBottom: '60px', textAlign: 'center' }}>
         <motion.div
-          initial={{ y: 20, opacity: 1 }}
-          animate={{ y: 0 }}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8 }}
           style={{ maxWidth: 800, margin: '0 auto' }}
         >

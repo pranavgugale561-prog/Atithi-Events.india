@@ -28,8 +28,9 @@ export default function WhyPlanner() {
   return (
     <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto">
       <motion.div
-        initial={{ y: 20, opacity: 1 }}
-        animate={{ y: 0 }}
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
         className="text-center mb-16"
       >
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.9rem', textTransform: 'uppercase' }}>
