@@ -60,6 +60,47 @@ body {
   100% { opacity: 0.12; filter: hue-rotate(-3deg); }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-in {
+  animation: fadeInUp 0.7s ease forwards;
+}
+.animate-in-delay-1 {
+  opacity: 0;
+  animation: fadeInUp 0.7s ease 0.1s forwards;
+}
+.animate-in-delay-2 {
+  opacity: 0;
+  animation: fadeInUp 0.7s ease 0.2s forwards;
+}
+.animate-in-delay-3 {
+  opacity: 0;
+  animation: fadeInUp 0.7s ease 0.35s forwards;
+}
+.animate-in-delay-4 {
+  opacity: 0;
+  animation: fadeInUp 0.7s ease 0.5s forwards;
+}
+.animate-in-delay-5 {
+  opacity: 0;
+  animation: fadeInUp 0.7s ease 0.65s forwards;
+}
+
+
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 500;

@@ -45,7 +45,7 @@ export default function EventClasses() {
     <div className="page-container" style={{ paddingBottom: 60, position: 'relative', zIndex: 1 }}>
       {/* Hero Section */}
       <section style={{ paddingTop: '140px', paddingBottom: '60px', textAlign: 'center' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }} className="animate-in">
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',

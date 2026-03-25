@@ -10,9 +10,11 @@ export default function WhySocialMedia() {
     { title: 'Viral Potential', desc: 'From coordinated family dances to emotional first looks, we edit your videos to trending audio tracks.' }
   ];
 
+  const delays = ['animate-in-delay-2', 'animate-in-delay-2', 'animate-in-delay-3', 'animate-in-delay-3', 'animate-in-delay-4'];
+
   return (
     <div style={{ paddingTop: '8rem', paddingBottom: '5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-      <div className="text-center mb-16">
+      <div className="text-center mb-16 animate-in">
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.9rem', textTransform: 'uppercase' }}>
           Trending Your Love Story
         </span>
@@ -32,7 +34,7 @@ export default function WhySocialMedia() {
         {valueProps.map((prop, i) => (
           <div
             key={i}
-            className="glass"
+            className={`glass ${delays[i]}`}
             style={{ padding: '2rem', borderRadius: '16px', borderBottom: '2px solid var(--accent-gold)' }}
           >
             <h3 style={{ fontSize: '1.4rem', color: 'var(--text-primary)', marginBottom: '1rem', fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
@@ -48,7 +50,7 @@ export default function WhySocialMedia() {
       {/* Reel Showcase */}
       <div style={{ marginTop: '6rem', marginBottom: '6rem' }}>
         <div
-          className="glass"
+          className="glass animate-in-delay-4"
           style={{ borderRadius: '32px', padding: '4rem 2rem', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '3rem' }}
         >
           {/* Phone Frame Mockup */}
@@ -111,7 +113,7 @@ export default function WhySocialMedia() {
       </div>
 
       <div
-        className="glass"
+        className="glass animate-in-delay-5"
         style={{ borderRadius: '32px', padding: '4rem 2rem', textAlign: 'center', border: '1px solid rgba(212,175,55,0.2)' }}
       >
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>

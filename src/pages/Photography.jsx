@@ -10,9 +10,11 @@ export default function Photography() {
     { title: 'Same Day Edit Reels', desc: 'Instant short films and reels delivered on the same day to share with the world.' }
   ];
 
+  const delays = ['animate-in-delay-2', 'animate-in-delay-2', 'animate-in-delay-3', 'animate-in-delay-3', 'animate-in-delay-4', 'animate-in-delay-4'];
+
   return (
     <div style={{ paddingTop: '8rem', paddingBottom: '5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-      <div className="text-center mb-16">
+      <div className="text-center mb-16 animate-in">
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.9rem', textTransform: 'uppercase' }}>
           Freezing Moments in Time
         </span>
@@ -31,7 +33,7 @@ export default function Photography() {
         {services.map((service, i) => (
           <div
             key={i}
-            className="glass"
+            className={`glass ${delays[i]}`}
             style={{ padding: '2rem', borderRadius: '16px', textAlign: 'center' }}
           >
             <h3 style={{ fontSize: '1.4rem', color: 'var(--accent-gold)', marginBottom: '1rem', fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
@@ -46,7 +48,7 @@ export default function Photography() {
 
       {/* Professional Gallery Showcase */}
       <div style={{ marginBottom: '6rem' }}>
-        <div className="text-center" style={{ marginBottom: '3rem' }}>
+        <div className="text-center animate-in-delay-3" style={{ marginBottom: '3rem' }}>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '1rem' }}>
             Portfolio Showcase
           </h2>
@@ -65,7 +67,7 @@ export default function Photography() {
           ].map((item, i) => (
             <div
               key={i}
-              className="glass"
+              className={`glass animate-in-delay-${i + 3}`}
               style={{ padding: '0.8rem', borderRadius: '20px', overflow: 'hidden' }}
             >
               <div style={{

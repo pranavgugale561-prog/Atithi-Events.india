@@ -25,10 +25,12 @@ export default function CateringPRO() {
     }
   ];
 
+  const cardDelays = ['animate-in-delay-2', 'animate-in-delay-2', 'animate-in-delay-3', 'animate-in-delay-3'];
+
   return (
     <div style={{ paddingTop: '8rem', paddingBottom: '5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
       {/* Header Section */}
-      <div className="text-center mb-16">
+      <div className="text-center mb-16 animate-in">
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.9rem', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Star size={14} /> The Ultimate Luxury Experience <Star size={14} />
         </span>
@@ -48,7 +50,7 @@ export default function CateringPRO() {
         {features.map((feature, i) => (
           <div
             key={i}
-            className="glass"
+            className={`glass ${cardDelays[i]}`}
             style={{
               padding: '2.5rem',
               borderRadius: '20px',
@@ -83,7 +85,7 @@ export default function CateringPRO() {
 
       {/* Visual Showcase / Promise */}
       <div
-        className="glass"
+        className="glass animate-in-delay-4"
         style={{
           borderRadius: '24px',
           padding: '4rem 2rem',
@@ -106,7 +108,7 @@ export default function CateringPRO() {
 
       {/* Service Standards */}
       <div style={{ marginBottom: '5rem' }}>
-        <h2 className="section-title text-center mb-12" style={{ fontSize: '2rem' }}>Our Standards of Excellence</h2>
+        <h2 className="section-title text-center mb-12 animate-in-delay-4" style={{ fontSize: '2rem' }}>Our Standards of Excellence</h2>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -119,7 +121,7 @@ export default function CateringPRO() {
           ].map((std, i) => (
             <div
               key={i}
-              className="glass"
+              className={`glass animate-in-delay-${i + 3}`}
               style={{ padding: '1.5rem', borderRadius: '16px', display: 'flex', gap: '1rem', alignItems: 'center' }}
             >
               <std.icon size={24} color="var(--accent-gold)" />

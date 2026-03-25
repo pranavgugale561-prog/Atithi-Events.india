@@ -23,7 +23,7 @@ export default function AboutContact() {
   return (
     <div style={{ paddingTop: '8rem', paddingBottom: '5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
       {/* 1. Hero: Our Story */}
-      <div className="text-center" style={{ marginBottom: '5rem' }}>
+      <div className="text-center animate-in" style={{ marginBottom: '5rem' }}>
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.15em', fontSize: '0.9rem', textTransform: 'uppercase' }}>
           Crafting Your Main Character Moment
         </span>
@@ -35,7 +35,7 @@ export default function AboutContact() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '4rem', alignItems: 'start' }}>
         {/* Left Col: Contact Info & Address */}
-        <div>
+        <div className="animate-in-delay-2">
           <div className="glass" style={{ padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--accent-gold)' }}>
             <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.2rem', color: '#fff', marginBottom: '1.5rem' }}>Meet the Vision</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
