@@ -42,7 +42,7 @@ export default function EventClasses() {
   };
 
   return (
-    <div className="page-container" style={{ paddingBottom: 60 }}>
+    <div className="page-container" style={{ paddingBottom: 60, position: 'relative', zIndex: 1 }}>
       {/* Hero Section */}
       <section style={{ paddingTop: '140px', paddingBottom: '60px', textAlign: 'center' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>

@@ -21,7 +21,7 @@ export default function AboutContact() {
   ];
 
   return (
-    <div style={{ paddingTop: '8rem', paddingBottom: '5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ paddingTop: '8rem', paddingBottom: '5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
       {/* 1. Hero: Our Story */}
       <div className="text-center" style={{ marginBottom: '5rem' }}>
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.15em', fontSize: '0.9rem', textTransform: 'uppercase' }}>
