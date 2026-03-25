@@ -45,12 +45,7 @@ export default function EventClasses() {
     <div className="page-container" style={{ paddingBottom: 60 }}>
       {/* Hero Section */}
       <section style={{ paddingTop: '140px', paddingBottom: '60px', textAlign: 'center' }}>
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          style={{ maxWidth: 800, margin: '0 auto' }}
-        >
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -103,20 +98,15 @@ export default function EventClasses() {
           }}>
             Join our exclusive 3-month intensive syllabus designed to transform you from an enthusiast into a certified industry professional. Learn the exact blueprints behind awe-inspiring events.
           </p>
-        </motion.div>
+        </div>
       </section>
 
       {/* Curriculum Bento Grid */}
       <section className="section-container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          style={{ marginBottom: 48, textAlign: 'center' }}
-        >
+        <div style={{ marginBottom: 48, textAlign: 'center' }}>
           <h2 className="section-title">The 3-Month Curriculum</h2>
           <p className="section-subtitle">15 comprehensive modules covering everything from deep-dive logistics to cutting-edge AI implementation.</p>
-        </motion.div>
+        </div>
 
         <div className="academy-bento-grid" style={{
           maxWidth: 1200,

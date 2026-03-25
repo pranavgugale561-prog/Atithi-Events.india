@@ -1,11 +1,10 @@
-import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
 
 export default function WhyPlanner() {
   const reasons = [
     {
       title: 'Stress-Free Experience',
-      desc: 'Your wedding day shouldn\'t feel like a job. We handle the logistics, so you can focus on making memories with your family and partner.',
+      desc: "Your wedding day shouldn't feel like a job. We handle the logistics, so you can focus on making memories with your family and partner.",
     },
     {
       title: 'Optimized Budget Management',
@@ -17,7 +16,7 @@ export default function WhyPlanner() {
     },
     {
       title: 'Crisis Management',
-      desc: 'Unexpected rain? Vendor delays? Power cuts? We have backup plans for our backup plans. We handle emergencies quietly and efficiently.',
+      desc: "Unexpected rain? Vendor delays? Power cuts? We have backup plans for our backup plans. We handle emergencies quietly and efficiently.",
     },
     {
       title: 'Design & Aesthetics',
@@ -26,35 +25,26 @@ export default function WhyPlanner() {
   ];
 
   return (
-    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto">
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-16"
-      >
+    <div style={{ paddingTop: '8rem', paddingBottom: '5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+      <div className="text-center mb-16">
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.9rem', textTransform: 'uppercase' }}>
           The Architect of Your Dreams
         </span>
-        <h1 className="section-title mt-4 mb-6">Why Hire an Event Planner?</h1>
-        <p className="text-muted max-w-[700px] mx-auto" style={{ fontSize: '1.1rem', lineHeight: 1.6 }}>
+        <h1 className="section-title" style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>Why Hire an Event Planner?</h1>
+        <p style={{ color: 'var(--text-secondary)', maxWidth: '700px', margin: '0 auto', fontSize: '1.1rem', lineHeight: 1.6 }}>
           A wedding is a beautiful chaos. An event planner ensures it remains beautiful while taking the chaos entirely upon themselves.
         </p>
-      </motion.div>
+      </div>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
         gap: '2.5rem',
-        justifyContent: 'center' 
+        justifyContent: 'center'
       }}>
         {reasons.map((reason, i) => (
-          <motion.div
+          <div
             key={i}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
             className="glass"
             style={{ padding: '2rem', borderRadius: '16px', borderLeft: '3px solid var(--accent-gold)' }}
           >
@@ -64,15 +54,13 @@ export default function WhyPlanner() {
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
               {reason.desc}
             </p>
-          </motion.div>
+          </div>
         ))}
       </div>
-      
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        className="mt-24 glass py-16 px-8 flex flex-col items-center justify-center text-center mx-auto w-full"
-        style={{ borderRadius: '32px', maxWidth: '1000px' }}
+
+      <div
+        className="glass"
+        style={{ borderRadius: '32px', maxWidth: '1000px', margin: '6rem auto 0', padding: '4rem 2rem', textAlign: 'center' }}
       >
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2rem', marginBottom: '1rem', color: 'var(--accent-gold)' }}>
           Ready to be a guest at your own wedding?
@@ -89,7 +77,7 @@ export default function WhyPlanner() {
         }}>
           Let's Plan Together
         </a>
-      </motion.div>
+      </div>
       <Footer />
     </div>
   );

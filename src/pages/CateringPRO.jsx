@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { ChefHat, Users, GlassWater, Crown, Sparkles, Star, CheckCircle2, ShieldCheck, Heart } from 'lucide-react';
 import Footer from '../components/Footer';
 
@@ -27,22 +26,17 @@ export default function CateringPRO() {
   ];
 
   return (
-    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto">
+    <div style={{ paddingTop: '8rem', paddingBottom: '5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header Section */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-16"
-      >
+      <div className="text-center mb-16">
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.9rem', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Star size={14} /> The Ultimate Luxury Experience <Star size={14} />
         </span>
-        <h1 className="section-title mt-4 mb-6">Catering Management <br />& Premium PRO Girls</h1>
-        <p className="text-muted max-w-[800px] mx-auto" style={{ fontSize: '1.1rem', lineHeight: 1.6 }}>
+        <h1 className="section-title" style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>Catering Management <br />&amp; Premium PRO Girls</h1>
+        <p style={{ color: 'var(--text-secondary)', maxWidth: '800px', margin: '0 auto', fontSize: '1.1rem', lineHeight: 1.6 }}>
           Elevate your event with world-class hospitality. From flawless catering execution to our elite team of PRO Girls ensuring every guest feels like royalty, we handle the intricacies of premium service.
         </p>
-      </motion.div>
+      </div>
 
       {/* Feature Grid */}
       <div style={{
@@ -52,16 +46,12 @@ export default function CateringPRO() {
         marginBottom: '5rem'
       }}>
         {features.map((feature, i) => (
-          <motion.div
+          <div
             key={i}
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
             className="glass"
-            style={{ 
-              padding: '2.5rem', 
-              borderRadius: '20px', 
+            style={{
+              padding: '2.5rem',
+              borderRadius: '20px',
               textAlign: 'center',
               borderTop: '1px solid rgba(212,175,55,0.2)',
               position: 'relative',
@@ -87,20 +77,17 @@ export default function CateringPRO() {
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>
               {feature.desc}
             </p>
-          </motion.div>
+          </div>
         ))}
       </div>
-      
+
       {/* Visual Showcase / Promise */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
+      <div
         className="glass"
-        style={{ 
-          borderRadius: '24px', 
-          padding: '4rem 2rem', 
-          textAlign: 'center', 
+        style={{
+          borderRadius: '24px',
+          padding: '4rem 2rem',
+          textAlign: 'center',
           border: '1px solid rgba(212,175,55,0.3)',
           background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(212,175,55,0.02) 100%)',
           position: 'relative',
@@ -115,26 +102,24 @@ export default function CateringPRO() {
         <p style={{ color: 'var(--text-muted)', maxWidth: '700px', margin: '0 auto', fontSize: '1.05rem', lineHeight: 1.7 }}>
           Our catering management isn't just about serving food; it's about choreographing a culinary experience. Paired with our trained PRO Girls who manage VVIPs, navigate crowds, and ensure smooth table hosting, your event transforms into an elite, stress-free celebration.
         </p>
-      </motion.div>
+      </div>
 
       {/* Service Standards */}
       <div style={{ marginBottom: '5rem' }}>
         <h2 className="section-title text-center mb-12" style={{ fontSize: '2rem' }}>Our Standards of Excellence</h2>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '1.5rem' 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '1.5rem'
         }}>
           {[
             { icon: CheckCircle2, title: 'Hygiene First', desc: 'Strict adherence to premium health and safety protocols.' },
             { icon: ShieldCheck, title: 'Trained Staff', desc: 'All PRO girls and servers undergo rigorous hospitality training.' },
             { icon: Heart, title: 'Personalized Care', desc: 'Anticipating guest needs before they even ask.' }
           ].map((std, i) => (
-            <motion.div
+            <div
               key={i}
               className="glass"
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
               style={{ padding: '1.5rem', borderRadius: '16px', display: 'flex', gap: '1rem', alignItems: 'center' }}
             >
               <std.icon size={24} color="var(--accent-gold)" />
@@ -142,7 +127,7 @@ export default function CateringPRO() {
                 <h4 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '0.2rem' }}>{std.title}</h4>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{std.desc}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

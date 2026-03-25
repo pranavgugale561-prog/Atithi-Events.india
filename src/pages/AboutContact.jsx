@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Instagram, MessageCircle, Send, Heart, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import Footer from '../components/Footer';
@@ -11,7 +10,7 @@ export default function AboutContact() {
     setFormState('sending');
     setTimeout(() => {
       setFormState('sent');
-      window.scrollTo(0, 0); // Instant reset to Hero
+      window.scrollTo(0, 0);
     }, 1500);
   };
 
@@ -22,30 +21,21 @@ export default function AboutContact() {
   ];
 
   return (
-    <div className="pt-32 pb-20 px-6 max-w-[1200px] mx-auto">
+    <div style={{ paddingTop: '8rem', paddingBottom: '5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
       {/* 1. Hero: Our Story */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-20"
-      >
+      <div className="text-center" style={{ marginBottom: '5rem' }}>
         <span style={{ color: 'var(--accent-gold)', fontWeight: 600, letterSpacing: '0.15em', fontSize: '0.9rem', textTransform: 'uppercase' }}>
           Crafting Your Main Character Moment
         </span>
-        <h1 className="section-title mt-4 mb-6" style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)' }}>Our Story</h1>
-        <p className="text-secondary max-w-[800px] mx-auto" style={{ fontSize: '1.2rem', lineHeight: 1.8, fontStyle: 'italic' }}>
-          "Where Plans Align & Movements Define. At Atithi Events, we don't just plan weddings; we manage magic. Our mission is to handle every single detail so your only job is to live your cinematic moment."
+        <h1 className="section-title" style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', marginTop: '1rem', marginBottom: '1.5rem' }}>Our Story</h1>
+        <p style={{ color: 'var(--text-secondary)', maxWidth: '800px', margin: '0 auto', fontSize: '1.2rem', lineHeight: 1.8, fontStyle: 'italic' }}>
+          "Where Plans Align &amp; Movements Define. At Atithi Events, we don't just plan weddings; we manage magic. Our mission is to handle every single detail so your only job is to live your cinematic moment."
         </p>
-      </motion.div>
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '4rem', alignItems: 'start' }}>
         {/* Left Col: Contact Info & Address */}
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-        >
+        <div>
           <div className="glass" style={{ padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--accent-gold)' }}>
             <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.2rem', color: '#fff', marginBottom: '1.5rem' }}>Meet the Vision</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
@@ -111,18 +101,14 @@ export default function AboutContact() {
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Right Col: Contact Form */}
-        <motion.div
-          initial={{ opacity: 0, x: 30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-        >
+        <div>
           <div className="glass" style={{ padding: '2.5rem', borderRadius: '24px' }}>
             <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.2rem', color: '#fff', marginBottom: '0.5rem' }}>Get in Touch</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.95rem' }}>Send us a message and we'll reply within 24 hours.</p>
-            
+
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -134,7 +120,7 @@ export default function AboutContact() {
                   <input type="text" className="input-luxury" placeholder="Wedding, Birthday, etc." style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px', borderRadius: '8px' }} />
                 </div>
               </div>
-              
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                 <label style={{ fontSize: '0.8rem', color: 'var(--accent-gold)', fontWeight: 600 }}>PHONE / WHATSAPP</label>
                 <input required type="tel" className="input-luxury" placeholder="+91 XXXX XXX XXX" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px', borderRadius: '8px' }} />
@@ -166,16 +152,11 @@ export default function AboutContact() {
               </button>
             </form>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Google Maps Shortcut */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        style={{ marginTop: '4rem', textAlign: 'center' }}
-      >
+      <div style={{ marginTop: '4rem', textAlign: 'center' }}>
         <a
           href="https://share.google/lRXYoAZyz78XmISIX"
           target="_blank"
@@ -198,7 +179,7 @@ export default function AboutContact() {
           <MapPin size={20} color="var(--accent-gold)" />
           <span>Open Studio Location in Google Maps</span>
         </a>
-      </motion.div>
+      </div>
       <Footer />
     </div>
   );
