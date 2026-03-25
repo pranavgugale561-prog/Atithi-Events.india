@@ -11,15 +11,16 @@ export default function Footer() {
   return (
     <footer style={{
       textAlign: 'center',
-      padding: '60px 24px 40px',
-      borderTop: '1px solid var(--glass-border)',
-      background: 'rgba(10, 10, 10, 0.5)',
-      marginTop: 40,
+      padding: '60px 24px',
+      borderTop: '1px solid var(--accent-gold)',
+      background: 'rgba(5, 5, 5, 0.95)',
+      marginTop: 80,
+      position: 'relative',
+      zIndex: 50,
+      width: '100%'
     }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
+      <div
+        style={{ opacity: 1 }}
       >
         <h3 style={{
           fontFamily: "'Cormorant Garamond', serif",
@@ -79,7 +80,7 @@ export default function Footer() {
             v1.1.2 — DEPLOYED 2026-03-26
           </p>
         </div>
-      </motion.div>
+      </div>
     </footer>
   );
 }

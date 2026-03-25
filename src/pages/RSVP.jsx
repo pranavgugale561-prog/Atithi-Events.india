@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode, Upload, Check, Camera, User, Mail, Users, UtensilsCrossed } from 'lucide-react';
 import { addRSVP } from '../utils/services';
+import Footer from '../components/Footer';
 
 // Simple QR Code SVG (pattern-based)
 function QRCode({ url }) {
@@ -334,6 +335,7 @@ export default function RSVP() {
           )}
         </motion.div>
       </div>
+      <Footer />
     </div>
   );
 }

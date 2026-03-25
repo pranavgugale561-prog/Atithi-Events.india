@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Sparkles, Instagram, Star, Quote } from 'lucide-react';
+import Footer from '../components/Footer';
 
 // Helper: strip hashtags from caption
 const cleanCaption = (text) => {
@@ -377,6 +378,7 @@ export default function Timeline() {
           Back to Home
         </Link>
       </motion.div>
+      <Footer />
     </div>
   );
 }

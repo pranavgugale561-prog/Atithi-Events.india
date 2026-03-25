@@ -42,6 +42,7 @@ export default function NotFound() {
           <Home size={18} /> Back to Home
         </Link>
       </motion.div>
+      <Footer />
     </div>
   );
 }
