@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Hero from '../components/Hero';
+import JourneyCarousel from '../components/JourneyCarousel';
 import ServiceSection from '../components/ServiceSection';
 import MoodBoard from '../components/MoodBoard';
 import Footer from '../components/Footer';
@@ -47,6 +48,7 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <JourneyCarousel />
       <section id="timeline" style={{ position: 'relative', zIndex: 10 }}>
         <Link to="/timeline" style={{ textDecoration: 'none' }}>
           <motion.div 

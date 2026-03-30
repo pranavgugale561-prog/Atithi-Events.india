@@ -10,6 +10,8 @@ export default function BackgroundMusic() {
 
   // 1. Attempt to play on mount (since loader interaction unlocks audio)
   useEffect(() => {
+    if (hasInteracted) return;
+
     const playAudio = () => {
       if (audioRef.current) {
         audioRef.current.play().then(() => {
@@ -26,7 +28,7 @@ export default function BackgroundMusic() {
 
     // Also keep listeners as fallback
     const handleFirstInteraction = () => {
-      if (!isPlaying) playAudio();
+      if (!hasInteracted) playAudio();
     };
 
     window.addEventListener('click', handleFirstInteraction, { once: true });
@@ -38,7 +40,7 @@ export default function BackgroundMusic() {
       window.removeEventListener('scroll', handleFirstInteraction);
       window.removeEventListener('touchstart', handleFirstInteraction);
     };
-  }, [isPlaying]);
+  }, [hasInteracted]);
 
   const togglePlay = () => {
     if (audioRef.current) {

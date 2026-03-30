@@ -17,6 +17,8 @@ const moreLinks = [
   { label: 'Why Planner?', to: '/why-planner' },
   { label: 'Academy', to: '/academy' },
   { label: 'Mood Board', to: '/#mood-board' },
+  { label: 'Activity Zone', to: '/activity-zone' },
+  { label: 'Artists & Ent.', to: '/artists' },
 ];
 
 const allLinks = [...primaryLinks, ...moreLinks];

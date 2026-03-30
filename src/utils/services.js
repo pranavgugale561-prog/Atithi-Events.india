@@ -1,5 +1,6 @@
 import { logActivity } from './activityLog';
 import { getDB } from '../firebase';
+import { activityZoneData, artistSectionData } from '../data/activitiesAndArtists';
 
 // Since we are migrating to Firestore, we don't need these anymore
 // const STORAGE_KEY = 'atithi_services';
@@ -278,4 +279,149 @@ export function imageToCompressedBase64(file, maxWidth = 600, quality = 0.6) {
     };
     reader.onerror = (error) => reject(error);
   });
+}
+
+/**
+ * ─── Activities ────────────────────────────────────────────────────────────
+ */
+
+export async function getActivities() {
+  const { getDocs } = await import('firebase/firestore');
+  const coll = await getCollectionRef('activities');
+  if (!coll) return [];
+
+  const snapshot = await getDocs(coll);
+  if (snapshot.empty) {
+    console.log('[Firestore] Populating default activities...');
+    const { doc, writeBatch } = await import('firebase/firestore');
+    const db = await getDB();
+    
+    let defaultActivities = [];
+    let idCounter = 1;
+    activityZoneData.forEach(cat => {
+      cat.items.forEach(item => {
+        defaultActivities.push({
+          id: `act_${idCounter++}`,
+          title: item,
+          category: cat.category,
+          description: '',
+          images: [],
+          icon: 'star'
+        });
+      });
+    });
+
+    // Write in chunks of 500 (Firestore limit)
+    for (let i = 0; i < defaultActivities.length; i += 500) {
+      const chunk = defaultActivities.slice(i, i + 500);
+      const chunkBatch = writeBatch(db);
+      chunk.forEach(act => {
+        const ref = doc(coll, act.id);
+        chunkBatch.set(ref, act);
+      });
+      await chunkBatch.commit();
+    }
+    
+    return defaultActivities;
+  }
+
+  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+}
+
+export async function addActivity(activity) {
+  const { addDoc } = await import('firebase/firestore');
+  const coll = await getCollectionRef('activities');
+  if (!coll) return null;
+  const docRef = await addDoc(coll, { ...activity, createdAt: new Date().toISOString() });
+  await logActivity('service_add', `Added activity: ${activity.title}`);
+  return { ...activity, id: docRef.id };
+}
+
+export async function updateActivity(id, updates) {
+  const { updateDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('activities', id);
+  if (!ref) return null;
+  await updateDoc(ref, updates);
+  await logActivity('service_update', `Updated activity: ${updates.title || id}`);
+  return { id, ...updates };
+}
+
+export async function deleteActivity(id) {
+  const { deleteDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('activities', id);
+  if (!ref) return;
+  await deleteDoc(ref);
+  await logActivity('service_delete', `Deleted activity: ${id}`);
+}
+
+/**
+ * ─── Artists ─────────────────────────────────────────────────────────────
+ */
+
+export async function getArtists() {
+  const { getDocs } = await import('firebase/firestore');
+  const coll = await getCollectionRef('artists');
+  if (!coll) return [];
+
+  const snapshot = await getDocs(coll);
+  if (snapshot.empty) {
+    console.log('[Firestore] Populating default artists...');
+    const { doc, writeBatch } = await import('firebase/firestore');
+    const db = await getDB();
+    
+    let defaultArtists = [];
+    let idCounter = 1;
+    artistSectionData.forEach(cat => {
+      cat.items.forEach(item => {
+        defaultArtists.push({
+          id: `art_${idCounter++}`,
+          title: item,
+          category: cat.category,
+          description: '',
+          images: [],
+          icon: 'star'
+        });
+      });
+    });
+
+    for (let i = 0; i < defaultArtists.length; i += 500) {
+      const chunk = defaultArtists.slice(i, i + 500);
+      const chunkBatch = writeBatch(db);
+      chunk.forEach(art => {
+        const ref = doc(coll, art.id);
+        chunkBatch.set(ref, art);
+      });
+      await chunkBatch.commit();
+    }
+    
+    return defaultArtists;
+  }
+
+  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+}
+
+export async function addArtist(artist) {
+  const { addDoc } = await import('firebase/firestore');
+  const coll = await getCollectionRef('artists');
+  if (!coll) return null;
+  const docRef = await addDoc(coll, { ...artist, createdAt: new Date().toISOString() });
+  await logActivity('service_add', `Added artist: ${artist.title}`);
+  return { ...artist, id: docRef.id };
+}
+
+export async function updateArtist(id, updates) {
+  const { updateDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('artists', id);
+  if (!ref) return null;
+  await updateDoc(ref, updates);
+  await logActivity('service_update', `Updated artist: ${updates.title || id}`);
+  return { id, ...updates };
+}
+
+export async function deleteArtist(id) {
+  const { deleteDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('artists', id);
+  if (!ref) return;
+  await deleteDoc(ref);
+  await logActivity('service_delete', `Deleted artist: ${id}`);
 }

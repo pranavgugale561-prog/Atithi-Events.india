@@ -27,6 +27,8 @@ import EventClasses from './pages/EventClasses';
 import CateringPRO from './pages/CateringPRO';
 import AboutContact from './pages/AboutContact';
 import NotFound from './pages/NotFound';
+import ActivityZone from './pages/ActivityZone';
+import ArtistSection from './pages/ArtistSection';
 import ErrorBoundary from './components/ErrorBoundary';
 import BackgroundMusic from './components/BackgroundMusic';
 
@@ -61,6 +63,8 @@ function AppRoutes() {
         <Route path="/classes" element={<EventClasses />} />
         <Route path="/academy" element={<EventClasses />} />
         <Route path="/catering-pro" element={<CateringPRO />} />
+        <Route path="/activity-zone" element={<ActivityZone />} />
+        <Route path="/artists" element={<ArtistSection />} />
         <Route path="/contact" element={<AboutContact />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<Admin />} />

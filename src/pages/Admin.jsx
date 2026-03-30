@@ -9,7 +9,7 @@ import {
   Calendar, Wifi, Globe, Shield, CheckCircle, AlertCircle, Zap, MessageSquare,
   RefreshCw
 } from 'lucide-react';
-import { getServices, addService, updateService, deleteService, getLeads, deleteLead, imageToCompressedBase64 } from '../utils/services';
+import { getServices, addService, updateService, deleteService, getLeads, deleteLead, imageToCompressedBase64, getActivities, addActivity, updateActivity, deleteActivity, getArtists, addArtist, updateArtist, deleteArtist } from '../utils/services';
 import { getActivityLog, clearActivityLog, logActivity } from '../utils/activityLog';
 import { getTimelineEvents, addTimelineEvent, deleteTimelineEvent } from '../utils/timeline';
 import { getTrafficData, getGlobalTrafficData, useActiveSessions } from '../hooks/useTraffic';
@@ -37,6 +37,8 @@ const TABS = [
   { id: 'activity', label: 'Activity',   icon: Activity },
   { id: 'timeline', label: 'Timeline',   icon: Calendar },
   { id: 'services', label: 'Services',   icon: Briefcase },
+  { id: 'activities', label: 'Activity Zone', icon: Palette },
+  { id: 'artists', label: 'Artists', icon: Music },
 ];
 
 // ─── Stat Card ────────────────────────────────────
@@ -1014,35 +1016,35 @@ function TimelineTab({ events, refreshData }) {
   );
 }
 
-// ─── Services Tab ─────────────────────────────────
-function ServicesTab({ services, refreshData }) {
+// ─── Admin Catalog Tab ─────────────────────────────────
+function AdminCatalogTab({ items, addFn, updateFn, deleteFn, refreshData, title, unitName, iconProp }) {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', icon: 'star', category: '', span: '', images: [] });
+  const [form, setForm] = useState({ title: '', description: '', icon: iconProp, category: '', span: '', images: [] });
   const [isCompressing, setIsCompressing] = useState(false);
 
   const handleSave = async () => {
     if (!form.title) return;
-    if (editing) { await updateService(editing, form); }
-    else { await addService(form); }
-    trackEvent('service_saved', { title: form.title, images_count: form.images.length, is_edit: !!editing });
-    setForm({ title: '', description: '', icon: 'star', category: '', span: '', images: [] });
+    if (editing) { await updateFn(editing, form); }
+    else { await addFn(form); }
+    trackEvent(`${unitName.toLowerCase()}_saved`, { title: form.title, images_count: form.images.length, is_edit: !!editing });
+    setForm({ title: '', description: '', icon: iconProp, category: '', span: '', images: [] });
     setEditing(null);
     setShowForm(false);
     await refreshData();
-    window.dispatchEvent(new Event('services-updated'));
+    window.dispatchEvent(new Event(`${title.toLowerCase().replace(' ', '-')}-updated`));
   };
 
-  const handleEdit = (service) => {
-    setForm({ title: service.title, description: service.description, icon: service.icon, category: service.category, span: service.span || '', images: service.images || [] });
-    setEditing(service.id);
+  const handleEdit = (item) => {
+    setForm({ title: item.title, description: item.description, icon: item.icon || iconProp, category: item.category, span: item.span || '', images: item.images || [] });
+    setEditing(item.id);
     setShowForm(true);
   };
 
   const handleDelete = async (id) => { 
-    await deleteService(id); 
+    await deleteFn(id); 
     await refreshData(); 
-    window.dispatchEvent(new Event('services-updated'));
+    window.dispatchEvent(new Event(`${title.toLowerCase().replace(' ', '-')}-updated`));
   };
 
   const handleImageUpload = async (e) => {
@@ -1063,17 +1065,17 @@ function ServicesTab({ services, refreshData }) {
 
   const removeImage = (idx) => setForm(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }));
 
-  const cats = [...new Set(services.map(s => s.category).filter(Boolean))];
+  const cats = [...new Set(items.map(s => s.category).filter(Boolean))];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', margin: 0 }}>Services</h2>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>{services.length} services across {cats.length} categories.</p>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', margin: 0 }}>{title}</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>{items.length} {title.toLowerCase()} across {cats.length} categories.</p>
         </div>
         <button
-          onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ title: '', description: '', icon: 'star', category: '', span: '', images: [] }); }}
+          onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ title: '', description: '', icon: iconProp, category: '', span: '', images: [] }); }}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '10px 18px', borderRadius: 10,
@@ -1081,7 +1083,7 @@ function ServicesTab({ services, refreshData }) {
             color: '#000', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', border: 'none',
           }}
         >
-          <Plus size={16} /> Add Service
+          <Plus size={16} /> Add {unitName}
         </button>
       </div>
 
@@ -1098,12 +1100,12 @@ function ServicesTab({ services, refreshData }) {
             }}
           >
             <h3 style={{ color: '#d4af37', fontWeight: 600, fontSize: '1rem', marginBottom: 16 }}>
-              {editing ? '✏️ Edit Service' : '➕ New Service'}
+              {editing ? `✏️ Edit ${unitName}` : `➕ New ${unitName}`}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div>
                 <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Title *</label>
-                <input className="input-luxury" placeholder="Service title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+                <input className="input-luxury" placeholder={`${unitName} title`} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
               </div>
               <div>
                 <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Category</label>
@@ -1111,7 +1113,7 @@ function ServicesTab({ services, refreshData }) {
               </div>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Description</label>
-                <textarea className="input-luxury" rows={3} placeholder="Service description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ resize: 'vertical' }} />
+                <textarea className="input-luxury" rows={3} placeholder={`${unitName} description`} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ resize: 'vertical' }} />
               </div>
               <div>
                 <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 6 }}>Icon</label>
@@ -1155,7 +1157,7 @@ function ServicesTab({ services, refreshData }) {
                 background: 'linear-gradient(135deg, #d4af37, #ffd700)',
                 color: '#000', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', border: 'none',
               }}>
-                <Save size={15} /> {editing ? 'Update' : 'Save'} Service
+                <Save size={15} /> {editing ? 'Update' : 'Save'} {unitName}
               </button>
               <button onClick={() => { setShowForm(false); setEditing(null); }} style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -1170,15 +1172,15 @@ function ServicesTab({ services, refreshData }) {
         )}
       </AnimatePresence>
 
-      {/* Services list grouped by category */}
+      {/* Items list grouped by category */}
       {cats.map(cat => (
         <div key={cat}>
           <h3 style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingLeft: 4 }}>{cat}</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {services.filter(s => s.category === cat).map(service => {
-              const Icon = ICON_MAP[service.icon] || Star;
+            {items.filter(s => s.category === cat).map(item => {
+              const Icon = ICON_MAP[item.icon] || Star;
               return (
-                <div key={service.id} style={{
+                <div key={item.id} style={{
                   display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px',
                   background: 'rgba(255,255,255,0.04)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)',
                 }}>
@@ -1186,19 +1188,19 @@ function ServicesTab({ services, refreshData }) {
                     <Icon size={17} color="#d4af37" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, color: '#fff', fontWeight: 600, fontSize: '0.88rem' }}>{service.title}</p>
-                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{service.description}</p>
+                    <p style={{ margin: 0, color: '#fff', fontWeight: 600, fontSize: '0.88rem' }}>{item.title}</p>
+                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description || 'No description'}</p>
                   </div>
-                  {(service.images?.length > 0) && (
+                  {(item.images?.length > 0) && (
                     <span style={{ fontSize: '0.7rem', color: '#a78bfa', background: 'rgba(167,139,250,0.12)', padding: '3px 8px', borderRadius: 20, flexShrink: 0 }}>
-                      {service.images.length} pic{service.images.length > 1 ? 's' : ''}
+                      {item.images.length} pic{item.images.length > 1 ? 's' : ''}
                     </span>
                   )}
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                    <button onClick={() => handleEdit(service)} style={{ background: 'rgba(212,175,55,0.1)', border: 'none', cursor: 'pointer', color: '#d4af37', borderRadius: 8, padding: 8, display: 'flex', alignItems: 'center' }}>
+                    <button onClick={() => handleEdit(item)} style={{ background: 'rgba(212,175,55,0.1)', border: 'none', cursor: 'pointer', color: '#d4af37', borderRadius: 8, padding: 8, display: 'flex', alignItems: 'center' }}>
                       <Pencil size={14} />
                     </button>
-                    <button onClick={() => handleDelete(service.id)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', cursor: 'pointer', color: '#ef4444', borderRadius: 8, padding: 8, display: 'flex', alignItems: 'center' }}>
+                    <button onClick={() => handleDelete(item.id)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', cursor: 'pointer', color: '#ef4444', borderRadius: 8, padding: 8, display: 'flex', alignItems: 'center' }}>
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -1217,6 +1219,8 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [leads, setLeads] = useState([]);
   const [services, setServices] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [artists, setArtists] = useState([]);
   const [timeline, setTimeline] = useState([]);
   const [activity, setActivity] = useState([]);
   const [globalTraffic, setGlobalTraffic] = useState(null);
@@ -1228,19 +1232,25 @@ export default function Admin() {
       // Use individual try-catch to prevent one failure from blocking all data
       const fetchLeads = async () => { try { return await getLeads(); } catch(e) { console.error('Leads fail', e); return []; } };
       const fetchServices = async () => { try { return await getServices(); } catch(e) { console.error('Services fail', e); return []; } };
+      const fetchActivities = async () => { try { return await getActivities(); } catch(e) { console.error('Activities fail', e); return []; } };
+      const fetchArtists = async () => { try { return await getArtists(); } catch(e) { console.error('Artists fail', e); return []; } };
       const fetchTimeline = async () => { try { return await getTimelineEvents(); } catch(e) { console.error('Timeline fail', e); return []; } };
       const fetchActivity = async () => { try { return await getActivityLog(); } catch(e) { console.error('Activity fail', e); return []; } };
       const fetchTraffic = async () => { try { return await getGlobalTrafficData(); } catch(e) { console.error('Traffic fail', e); return null; } };
 
-      const [l, s, tl, a, t] = await Promise.all([
+      const [l, s, act, art, tl, a, t] = await Promise.all([
         fetchLeads(),
         fetchServices(),
+        fetchActivities(),
+        fetchArtists(),
         fetchTimeline(),
         fetchActivity(),
         fetchTraffic(),
       ]);
       setLeads(l);
       setServices(s);
+      setActivities(act);
+      setArtists(art);
       setTimeline(tl);
       setActivity(a);
       setGlobalTraffic(t);
@@ -1276,7 +1286,9 @@ export default function Admin() {
       case 'security':  return <SecurityTab leads={leads} />;
       case 'activity':  return <ActivityTab log={activity} refreshData={refreshData} />;
       case 'timeline':  return <TimelineTab events={timeline} refreshData={refreshData} />;
-      case 'services':  return <ServicesTab services={services} refreshData={refreshData} />;
+      case 'services':  return <AdminCatalogTab items={services} addFn={addService} updateFn={updateService} deleteFn={deleteService} refreshData={refreshData} title="Services" unitName="Service" iconProp="icon" />;
+      case 'activities': return <AdminCatalogTab items={activities} addFn={addActivity} updateFn={updateActivity} deleteFn={deleteActivity} refreshData={refreshData} title="Activities" unitName="Activity" iconProp="star" />;
+      case 'artists':   return <AdminCatalogTab items={artists} addFn={addArtist} updateFn={updateArtist} deleteFn={deleteArtist} refreshData={refreshData} title="Artists" unitName="Artist" iconProp="star" />;
       default: return null;
     }
   };
