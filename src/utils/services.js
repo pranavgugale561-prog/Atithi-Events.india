@@ -300,6 +300,36 @@ export function imageToCompressedBase64(file, maxWidth = 600, quality = 0.6) {
 }
 
 export async function uploadMediaToStorage(file) {
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+  // 1. If Cloudinary is configured, use it (Fast, optimized media delivery)
+  if (cloudName && uploadPreset) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+      formData.append('folder', 'atithi_events'); // organizes uploads in a folder
+
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Failed to upload to Cloudinary');
+      }
+      
+      const data = await response.json();
+      return data.secure_url; // Return the Cloudinary URL
+    } catch (error) {
+      console.error("Cloudinary Upload Error:", error);
+      throw new Error("Failed to upload to Cloudinary. Check your Cloud Name and Upload Preset.");
+    }
+  }
+
+  // 2. Fallback to Firebase Storage if Cloudinary is not configured
   try {
     const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
     const { getApp } = await import('firebase/app');
@@ -307,14 +337,11 @@ export async function uploadMediaToStorage(file) {
     const uniqueName = `uploads/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
     const storageRef = ref(storage, uniqueName);
     
-    // Upload the file
     await uploadBytes(storageRef, file);
-    
-    // Return the download URL
     return await getDownloadURL(storageRef);
   } catch (error) {
     console.error("Firebase Storage Upload Error:", error);
-    throw new Error("Failed to upload media to Storage. Make sure Firebase Storage is enabled and rules allow writes.");
+    throw new Error("Failed to upload media. Please configure Cloudinary or Firebase Storage.");
   }
 }
 
