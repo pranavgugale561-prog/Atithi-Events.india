@@ -1739,7 +1739,7 @@ export default function Admin() {
     refreshData().then(() => setLoading(false));
   }, []);
 
-  const renderTab = () => {
+  const renderActiveTab = () => {
     switch(activeTab) {
       case 'dashboard': return <DashboardTab leads={leads} customers={customers} globalTraffic={globalTraffic} />;
       case 'leads':     return <LeadsTab leads={leads} refreshData={refreshData} />;
