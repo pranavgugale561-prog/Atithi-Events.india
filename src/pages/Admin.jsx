@@ -1687,6 +1687,11 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.removeItem('atithi_admin');
+    navigate('/admin/login');
+  };
+
   const refreshData = async () => {
     try {
       // Use individual try-catch to prevent one failure from blocking all data
