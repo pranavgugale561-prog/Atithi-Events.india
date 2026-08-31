@@ -334,7 +334,7 @@ function DashboardTab({ setActiveTab, leads, loading, activity = [], globalTraff
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24 }}>
           <CapacityBar label="Firestore (Database)" used={Math.max(0.12, leads.length * 0.005)} max={1} unit="GB" icon={<Database size={16} color="#d4af37" />} color="#d4af37" />
-          <CapacityBar label="Firebase Storage (Media)" used={1.48} max={5} unit="GB" icon={<HardDrive size={16} color="#a78bfa" />} color="#a78bfa" />
+          <CapacityBar label="Cloudinary (Media)" used={0.2} max={25} unit="Credits" icon={<HardDrive size={16} color="#a78bfa" />} color="#a78bfa" />
           <CapacityBar label="Vercel Bandwidth (Monthly)" used={24.5} max={100} unit="GB" icon={<Wifi size={16} color="#38bdf8" />} color="#38bdf8" />
         </div>
       </div>
