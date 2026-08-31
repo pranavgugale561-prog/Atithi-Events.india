@@ -114,27 +114,7 @@ export default function BackgroundMusic() {
             )}
           </AnimatePresence>
 
-          {/* Animated sound waves when playing */}
-          {isPlaying && (
-            <div style={{
-              position: 'absolute',
-              top: '-5px',
-              right: '-5px',
-              display: 'flex',
-              gap: '2px',
-              alignItems: 'flex-end',
-              height: '10px'
-            }}>
-              {[0.5, 0.8, 0.4].map((delay, i) => (
-                <motion.div
-                  key={i}
-                  animate={{ height: [2, 10, 2] }}
-                  transition={{ repeat: Infinity, duration: 0.8, delay }}
-                  style={{ width: '2px', background: 'var(--accent-gold)', borderRadius: '1px' }}
-                />
-              ))}
-            </div>
-          )}
+
         </motion.button>
       </div>
     </>
