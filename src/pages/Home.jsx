@@ -20,7 +20,7 @@ function DiscoverSection() {
         <h2 className="section-title">Discover the Magic</h2>
         <p className="section-subtitle">Delve deeper into how we craft your perfect day.</p>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '2rem', maxWidth: 1200, margin: '0 auto' }}>
         {features.map((feat, i) => (
           <Link to={feat.link} key={i} style={{ textDecoration: 'none' }}>
             <motion.div

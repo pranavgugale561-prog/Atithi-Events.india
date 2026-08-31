@@ -308,7 +308,7 @@ export default function RSVP() {
           {photos.length > 0 && (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 100px), 1fr))',
               gap: 12,
               marginTop: 20,
             }}>

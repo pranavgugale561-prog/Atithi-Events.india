@@ -1437,7 +1437,7 @@ function HeroTab({ images, refreshData }) {
       </div>
 
       
-<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 20 }}>
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 380px), 1fr))', gap: 20 }}>
         
 
         {images.map((img, index) => (
@@ -1556,7 +1556,7 @@ function ReelsTab({ reels, refreshData }) {
         <p style={{ marginTop: 12, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>💡 Tip: You can paste the full Instagram link or just the ID.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 20 }}>
         {reels.map(reel => (
           <div key={reel.id} className="glass-card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1640,7 +1640,7 @@ function JourneyTab({ images, refreshData }) {
 
       <input type="file" ref={fileInputRef} onChange={handleUpload} accept="image/*,video/*" style={{ display: 'none' }} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px', marginTop: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 250px), 1fr))', gap: '20px', marginTop: 10 }}>
         {(images || []).map((img) => {
           const isVideo = typeof img.url === 'string' && (img.url.match(/\.(mp4|webm|mov)$/i) || img.url.includes('video%2F'));
           return (

@@ -56,7 +56,7 @@ export default function WhySocialMedia() {
         viewport={{ once: true, margin: "-100px" }}
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
           gap: '2.5rem',
           justifyContent: 'center'
         }}
@@ -196,7 +196,7 @@ export default function WhySocialMedia() {
           viewport={{ once: true }}
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
             gap: '2rem',
             marginBottom: '6rem'
           }}

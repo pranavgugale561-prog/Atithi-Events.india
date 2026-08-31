@@ -179,7 +179,7 @@ export default function ActivityZone() {
                 
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))',
                   gap: '2rem'
                 }}>
                   {categoryObj.items.map((item, itemIdx) => (

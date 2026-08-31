@@ -90,7 +90,7 @@ export default function Photography() {
         {/* Services Grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
           gap: '2rem',
           marginBottom: '7rem'
         }}>
@@ -157,7 +157,7 @@ export default function Photography() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
             gap: '2rem',
           }}>
             {galleryImages.map((item, i) => (

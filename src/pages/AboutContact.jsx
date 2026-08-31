@@ -33,7 +33,7 @@ export default function AboutContact() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '4rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '4rem', alignItems: 'start' }}>
         {/* Left Col: Contact Info & Address */}
         <div className="animate-in-delay-2">
           <div className="glass" style={{ padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--accent-gold)' }}>
