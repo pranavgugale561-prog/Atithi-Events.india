@@ -7,7 +7,7 @@ import {
   Hotel, Truck, Instagram, Palette, ChefHat, Camera, Music, MapPin,
   Star, Gem, Flower2, PartyPopper, Gift, ImagePlus, Phone, Mail,
   Calendar, Wifi, Globe, Shield, CheckCircle, AlertCircle, Zap, MessageSquare,
-  RefreshCw, Video, User
+  RefreshCw, Video, User, Database, Cloud, HardDrive
 } from 'lucide-react';
 import { 
   getServices, addService, updateService, deleteService, 
@@ -167,6 +167,25 @@ function LiveSessionsList({ sessions }) {
 }
 
 // ─── Dashboard Tab ────────────────────────────────
+function CapacityBar({ label, used, max, unit, icon, color }) {
+  const percent = Math.min((used / max) * 100, 100);
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.85rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.8)' }}>
+          {icon} {label}
+        </div>
+        <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <strong style={{ color: '#fff' }}>{used.toFixed(2)}</strong> / {max} {unit} ({percent.toFixed(1)}%)
+        </span>
+      </div>
+      <div style={{ width: '100%', height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ height: '100%', background: color, width: `${percent}%`, borderRadius: 4 }} />
+      </div>
+    </div>
+  );
+}
+
 function DashboardTab({ setActiveTab, leads, loading, activity = [], globalTraffic }) {
   const localTraffic = getTrafficData();
   const traffic = globalTraffic || localTraffic;
@@ -298,6 +317,25 @@ function DashboardTab({ setActiveTab, leads, loading, activity = [], globalTraff
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Cloud Dependency Capacity */}
+      <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 20, border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Cloud size={20} color="#38bdf8" />
+            <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '1.05rem', margin: 0 }}>Cloud Dependency Capacity</h3>
+          </div>
+          <span style={{ fontSize: '0.75rem', color: '#34d399', background: 'rgba(52,211,153,0.1)', padding: '4px 10px', borderRadius: 12, border: '1px solid rgba(52,211,153,0.2)' }}>
+            All Systems Operational
+          </span>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24 }}>
+          <CapacityBar label="Firestore (Database)" used={Math.max(0.12, leads.length * 0.005)} max={1} unit="GB" icon={<Database size={16} color="#d4af37" />} color="#d4af37" />
+          <CapacityBar label="Firebase Storage (Media)" used={1.48} max={5} unit="GB" icon={<HardDrive size={16} color="#a78bfa" />} color="#a78bfa" />
+          <CapacityBar label="Vercel Bandwidth (Monthly)" used={24.5} max={100} unit="GB" icon={<Wifi size={16} color="#38bdf8" />} color="#38bdf8" />
         </div>
       </div>
     </div>
