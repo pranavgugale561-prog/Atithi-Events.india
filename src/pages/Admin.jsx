@@ -23,6 +23,7 @@ import { getActivityLog, clearActivityLog, logActivity } from '../utils/activity
 import { getTimelineEvents, addTimelineEvent, deleteTimelineEvent } from '../utils/timeline';
 import { getTrafficData, getGlobalTrafficData, useActiveSessions } from '../hooks/useTraffic';
 import { trackEvent } from '../firebase';
+import QuotationBuilder from '../components/QuotationBuilder';
 
 
 function exportCSV(data, filename) {
@@ -69,12 +70,13 @@ const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'leads',    label: 'Leads',      icon: Users },
   { id: 'customers',label: 'Customers',  icon: User },
+  { id: 'quotations', label: 'Quotations', icon: FileText },
   { id: 'traffic',  label: 'Traffic',    icon: BarChart3 },
   { id: 'security', label: 'Security',   icon: Shield },
   { id: 'activity', label: 'Activity',   icon: Activity },
   { id: 'timeline', label: 'Timeline',   icon: Calendar },
   { id: 'hero',     label: 'Hero Backgrounds', icon: ImagePlus },
-    { id: 'carousel', label: 'Hero Banner Images', icon: ImagePlus },
+  { id: 'carousel', label: 'Hero Banner Images', icon: ImagePlus },
   { id: 'reels',    label: 'Instagram Reels', icon: Video },
   { id: 'services', label: 'Services',   icon: Briefcase },
   { id: 'activities', label: 'Activity Zone', icon: Palette },
@@ -1782,6 +1784,7 @@ export default function Admin() {
       case 'dashboard': return <DashboardTab leads={leads} customers={customers} globalTraffic={globalTraffic} />;
       case 'leads':     return <LeadsTab leads={leads} refreshData={refreshData} />;
       case 'customers': return <CustomersTab customers={customers} refreshData={refreshData} />;
+      case 'quotations': return <QuotationBuilder />;
       case 'activity':  return <ActivityTab log={activity} refreshData={refreshData} />;
       case 'timeline':  return <TimelineTab events={timeline} refreshData={refreshData} />;
       case 'hero':      return <HeroTab images={heroImages} refreshData={refreshData} />;
