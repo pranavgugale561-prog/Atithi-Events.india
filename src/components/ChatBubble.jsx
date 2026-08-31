@@ -1,48 +1,49 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
+import { MessageCircle, X, Send, Sparkles, User, Phone } from 'lucide-react';
+import { getCustomerByPhone, addCustomer } from '../utils/services';
 
 const FAQ_BUTTONS = [
-  { label: '👗 Dress Code', query: 'What is the dress code?' },
-  { label: '📍 Venue Info', query: 'Where is the venue?' },
-  { label: '📅 Schedule', query: 'What is the schedule?' },
-  { label: '🎁 Gift Registry', query: 'Where is the gift registry?' },
-  { label: '🍽️ Menu Options', query: 'What are the menu options?' },
-  { label: '📸 Photo Policy', query: 'Can I take photos?' },
+  { label: 'Event Planning', query: 'I want to plan an event' },
+  { label: 'Photography', query: 'I need a photographer' },
+  { label: 'Catering Options', query: 'What are your catering options?' },
+  { label: 'Pricing', query: 'How much do you charge?' },
 ];
-
-const RESPONSES = {
-  'dress code': 'The dress code is **Black Tie Optional**. Think elegant evening wear — long gowns, cocktail dresses, or suits. Feel free to add your personal flair! 🌟',
-  'venue': 'The celebration will be held at **The Grand Orchid Estate**, nestled in the countryside. Valet parking is available. Shuttles will run from the partner hotel every 30 minutes starting at 4 PM. 🏛️',
-  'schedule': '**Ceremony**: 5:00 PM ・ **Cocktail Hour**: 5:45 PM ・ **Reception & Dinner**: 7:00 PM ・ **Dancing & Dessert**: 9:00 PM ・ **Sparkler Send-Off**: 11:30 PM ✨',
-  'gift registry': 'We\'re registered at **Anthropologie** and **Crate & Barrel**. You can also contribute to our honeymoon fund via our wedding website. Your presence is the greatest gift! 💝',
-  'menu': 'We\'re offering a **curated multi-course dinner** with vegetarian, vegan, and gluten-free options. A live pasta station and artisanal dessert bar will also be available! 🍝',
-  'photo': 'We love photos! We have a professional photographer, but please feel free to capture moments. We just ask for an **unplugged ceremony** — phones away during the vows. 📸',
-  'default': 'Thank you for your question! Our wedding coordinators will be happy to help. Feel free to ask about the dress code, venue, schedule, menu, or gift registry. 💐',
-};
-
-function getResponse(query) {
-  const q = query.toLowerCase();
-  if (q.includes('dress') || q.includes('wear') || q.includes('attire')) return RESPONSES['dress code'];
-  if (q.includes('venue') || q.includes('location') || q.includes('where')) return RESPONSES['venue'];
-  if (q.includes('schedule') || q.includes('time') || q.includes('when')) return RESPONSES['schedule'];
-  if (q.includes('gift') || q.includes('registry') || q.includes('present')) return RESPONSES['gift registry'];
-  if (q.includes('menu') || q.includes('food') || q.includes('eat') || q.includes('dinner')) return RESPONSES['menu'];
-  if (q.includes('photo') || q.includes('camera') || q.includes('picture')) return RESPONSES['photo'];
-  return RESPONSES['default'];
-}
 
 export default function ChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  
+  // Chat state machine
+  const [chatState, setChatState] = useState('INIT'); // INIT -> WAIT_NAME -> WAIT_PHONE -> CHAT
+  const [userData, setUserData] = useState({ name: '', phone: '' });
+  
   const [messages, setMessages] = useState([
-    { id: 1, type: 'bot', text: 'Hi there! 💐 I\'m your Wedding Assistant. Ask me anything about the celebration!' },
+    { id: 1, type: 'bot', text: 'Hi! Welcome to Atithi Events. Can I get your name to start?' }
   ]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    const handleToggle = () => setIsOpen(prev => !prev);
+    // Check if user is already logged into chat via localStorage
+    const savedChatUser = localStorage.getItem('atithi_chat_user');
+    if (savedChatUser) {
+      try {
+        const parsed = JSON.parse(savedChatUser);
+        setUserData(parsed);
+        setChatState('CHAT');
+        setMessages([
+          { id: 1, type: 'bot', text: `Welcome back, ${parsed.name}! How can we help you plan your next event today?` }
+        ]);
+      } catch (e) {}
+    }
+
+    const handleToggle = (e) => {
+      setIsOpen(true);
+      if (e.detail?.message) {
+        setTimeout(() => handleUserMessage(e.detail.message), 500);
+      }
+    };
     window.addEventListener('toggle-chat', handleToggle);
     return () => window.removeEventListener('toggle-chat', handleToggle);
   }, []);
@@ -51,28 +52,96 @@ export default function ChatBubble() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = (text) => {
-    if (!text.trim()) return;
-    const userMsg = { id: Date.now(), type: 'user', text };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
+  const addBotMessage = (text) => {
     setIsTyping(true);
-
     setTimeout(() => {
-      const response = getResponse(text);
-      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'bot', text: response }]);
+      setMessages(prev => [...prev, { id: Date.now(), type: 'bot', text }]);
       setIsTyping(false);
-    }, 800 + Math.random() * 700);
+    }, 800 + Math.random() * 500);
+  };
+
+  const handleUserMessage = async (text) => {
+    if (!text.trim()) return;
+    
+    // Add user message
+    setMessages(prev => [...prev, { id: Date.now(), type: 'user', text }]);
+    setInput('');
+
+    if (chatState === 'INIT') {
+      setUserData(prev => ({ ...prev, name: text }));
+      setChatState('WAIT_PHONE');
+      addBotMessage(`Nice to meet you, ${text}! Could you please provide your phone number so our team can reach out to you if we get disconnected?`);
+      return;
+    }
+
+    if (chatState === 'WAIT_PHONE') {
+      // Validate phone (simple check)
+      const cleaned = text.replace(/[^0-9+]/g, '');
+      if (cleaned.length < 8) {
+        addBotMessage("That doesn't look like a valid phone number. Could you please try again?");
+        return;
+      }
+      
+      setUserData(prev => ({ ...prev, phone: cleaned }));
+      setIsTyping(true);
+      
+      try {
+        const existingCustomer = await getCustomerByPhone(cleaned);
+        const name = userData.name;
+        if (existingCustomer) {
+          // Found existing
+          localStorage.setItem('atithi_chat_user', JSON.stringify({ name: existingCustomer.name, phone: existingCustomer.phone }));
+          setChatState('CHAT');
+          addBotMessage(`Welcome back, ${existingCustomer.name}! We have your number ending in ${cleaned.slice(-4)} on file. What kind of event are you looking to plan today?`);
+        } else {
+          // New customer
+          await addCustomer({ name, phone: cleaned, source: 'Chatbot' });
+          localStorage.setItem('atithi_chat_user', JSON.stringify({ name, phone: cleaned }));
+          setChatState('CHAT');
+          addBotMessage(`Thanks ${name}! We've saved your contact info. How can our event experts assist you today?`);
+        }
+      } catch (err) {
+        console.error("Firebase error", err);
+        setChatState('CHAT');
+        addBotMessage("Thanks! How can our event experts assist you today?");
+      }
+      
+      setIsTyping(false);
+      return;
+    }
+
+    if (chatState === 'CHAT') {
+      // Basic sales agent NLP
+      setIsTyping(true);
+      setTimeout(() => {
+        const q = text.toLowerCase();
+        let reply = "Our team will be in touch with you shortly to discuss your requirements. Is there anything specific you want to know about our services?";
+        
+        if (q.includes('plan') || q.includes('event') || q.includes('wedding') || q.includes('birthday')) {
+          reply = "We specialize in end-to-end event planning! We handle everything from venue selection to decor and catering. Would you like our planner to call you at " + userData.phone + " to discuss details?";
+        } else if (q.includes('photo') || q.includes('video') || q.includes('cinematic')) {
+          reply = "Our photography and cinematography team is top-notch! We offer drone shoots, candid photography, and cinematic films. Should I note down that you're interested in photography?";
+        } else if (q.includes('cater') || q.includes('food') || q.includes('menu')) {
+          reply = "We offer premium catering with live counters, multi-cuisine options, and personalized menus tailored to your taste. Do you have a rough guest count in mind?";
+        } else if (q.includes('price') || q.includes('cost') || q.includes('charge')) {
+          reply = "Our pricing is highly customizable based on your guest count, venue, and specific requirements. We'd love to give you a free consultation call. Would you prefer a morning or evening call?";
+        } else if (q.includes('yes') || q.includes('sure') || q.includes('ok')) {
+          reply = "Excellent! I've noted that down. Our senior event expert will give you a call on your number soon to discuss further. Meanwhile, feel free to explore our Activity Zone!";
+        }
+
+        setMessages(prev => [...prev, { id: Date.now(), type: 'bot', text: reply }]);
+        setIsTyping(false);
+      }, 1000);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    sendMessage(input);
+    handleUserMessage(input);
   };
 
   return (
     <>
-      {/* Float Button */}
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -89,7 +158,6 @@ export default function ChatBubble() {
         )}
       </AnimatePresence>
 
-      {/* Chat Panel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -128,10 +196,10 @@ export default function ChatBubble() {
                 <Sparkles size={20} color="var(--accent-gold)" />
                 <div>
                   <p style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                    Wedding Assistant
+                    Atithi Sales Agent
                   </p>
                   <p style={{ fontSize: '0.7rem', color: 'var(--accent-coral)' }}>
-                    ● Online
+                    🟢 Online
                   </p>
                 </div>
               </div>
@@ -201,42 +269,36 @@ export default function ChatBubble() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* FAQ Quick Buttons */}
-            <div style={{
-              padding: '8px 16px',
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 6,
-              borderTop: '1px solid var(--glass-border)',
-            }}>
-              {FAQ_BUTTONS.map(btn => (
-                <button
-                  key={btn.label}
-                  onClick={() => sendMessage(btn.query)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: 10,
-                    border: '1px solid var(--glass-border)',
-                    background: 'var(--glass-bg)',
-                    color: 'var(--text-secondary)',
-                    fontSize: '0.7rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    fontFamily: "'Inter', sans-serif",
-                  }}
-                  onMouseEnter={e => {
-                    e.target.style.background = 'var(--accent-blush)';
-                    e.target.style.borderColor = 'var(--accent-rose)';
-                  }}
-                  onMouseLeave={e => {
-                    e.target.style.background = 'var(--glass-bg)';
-                    e.target.style.borderColor = 'var(--glass-border)';
-                  }}
-                >
-                  {btn.label}
-                </button>
-              ))}
-            </div>
+            {/* FAQ Quick Buttons (only when in CHAT state) */}
+            {chatState === 'CHAT' && (
+              <div style={{
+                padding: '8px 16px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 6,
+                borderTop: '1px solid var(--glass-border)',
+              }}>
+                {FAQ_BUTTONS.map(btn => (
+                  <button
+                    key={btn.label}
+                    onClick={() => handleUserMessage(btn.query)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 10,
+                      border: '1px solid var(--glass-border)',
+                      background: 'var(--glass-bg)',
+                      color: 'var(--text-secondary)',
+                      fontSize: '0.7rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontFamily: "'Inter', sans-serif",
+                    }}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Input */}
             <form
@@ -252,7 +314,7 @@ export default function ChatBubble() {
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Ask me anything..."
+                placeholder={chatState === 'INIT' ? "Enter your name..." : chatState === 'WAIT_PHONE' ? "Enter phone number..." : "Ask me anything..."}
                 className="input-luxury"
                 style={{ flex: 1, padding: '10px 16px', borderRadius: 12 }}
               />
@@ -270,7 +332,7 @@ export default function ChatBubble() {
 
       <style>{`
         @media (max-width: 768px) {
-          .chat-float-btn { bottom: 88px !important; }
+          .chat-float-btn { bottom: 110px !important; }
         }
       `}</style>
     </>

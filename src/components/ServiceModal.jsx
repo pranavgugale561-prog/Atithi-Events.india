@@ -1,7 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, ShoppingCart, Check, Image as ImageIcon } from 'lucide-react';
-import { useState } from 'react';
+import { X, ChevronLeft, ChevronRight, ShoppingCart, Check, Share2, Image as ImageIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useCart } from './CartContext';
+import { shareItem } from '../utils/shareUtils';
 
 export default function ServiceModal({ service, onClose }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -11,15 +13,13 @@ export default function ServiceModal({ service, onClose }) {
   const images = service.images || [];
   const hasImages = images.length > 0;
 
-  const handleNext = (e) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const handlePrev = (e) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
+  useEffect(() => {
+    // Prevent background scrolling when modal is open
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -28,7 +28,7 @@ export default function ServiceModal({ service, onClose }) {
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -39,121 +39,170 @@ export default function ServiceModal({ service, onClose }) {
           position: 'fixed',
           inset: 0,
           background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(8px)',
+          backdropFilter: 'blur(12px)',
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '16px'
+          padding: '20px'
         }}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          exit={{ opacity: 0, scale: 0.95, y: 30 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="glass"
+          className="w-full max-w-[1000px] flex flex-col md:flex-row relative"
           style={{
-            width: '100%',
-            maxWidth: 600,
+            background: 'var(--glass-bg)',
+            border: '1px solid rgba(212, 175, 55, 0.2)',
             borderRadius: 24,
             overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
             maxHeight: '90vh',
-            boxShadow: '0 24px 64px rgba(212,175,55,0.2)',
-            border: '1px solid var(--accent-gold)'
+            boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
           }}
         >
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid var(--glass-border)' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-              {service.category}
-            </span>
-            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: 8, borderRadius: '50%', cursor: 'pointer', display: 'flex' }}>
-              <X size={18} />
-            </button>
-          </div>
+          {/* Floating Close Button */}
+          <button 
+            onClick={onClose} 
+            style={{ 
+              position: 'absolute', top: 20, right: 20, zIndex: 10, 
+              background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', 
+              border: '1px solid rgba(255,255,255,0.15)', color: '#fff', 
+              padding: 10, borderRadius: '50%', cursor: 'pointer',
+              transition: 'all 0.3s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(212,175,55,0.8)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
+          >
+            <X size={20} />
+          </button>
 
-          <div style={{ overflowY: 'auto', flex: 1 }}>
-            {/* Image Gallery */}
+          <div className="no-scrollbar service-modal-layout" style={{ overflowY: 'auto', maxHeight: '90vh' }}>
+            
+            {/* Immersive Hero Header */}
             {hasImages ? (
-              <div className="modal-gallery-container" style={{ position: 'relative', width: '100%', background: '#000' }}>
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentImageIndex}
-                    src={images[currentImageIndex]}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  />
-                </AnimatePresence>
+              <div 
+                className="service-modal-image-container shrink-0" 
+                style={{ background: 'var(--bg-primary)' }}
+              >
                 
-                {images.length > 1 && (
-                  <>
-                    <button onClick={handlePrev} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', padding: 8, borderRadius: '50%', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
-                      <ChevronLeft size={24} />
-                    </button>
-                    <button onClick={handleNext} style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', padding: 8, borderRadius: '50%', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
-                      <ChevronRight size={24} />
-                    </button>
-                    
-                    {/* Dots */}
-                    <div style={{ position: 'absolute', bottom: 16, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 8 }}>
-                      {images.map((_, i) => (
-                        <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i === currentImageIndex ? 'var(--accent-gold)' : 'rgba(255,255,255,0.4)', transition: 'background 0.3s' }} />
-                      ))}
-                    </div>
-                  </>
-                )}
+                {/* Crisp Foreground Image - Full Bleed */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentImageIndex}
+                    initial={{ opacity: 0, scale: 1.02 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }}
+                  >
+                    {(() => {
+                      const url = images[currentImageIndex];
+                      const isVideo = url.split('?')[0].toLowerCase().match(/\.(mp4|webm|mov)$/) || url.includes('video%2F');
+                      return isVideo ? (
+                        <video src={url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} autoPlay loop muted playsInline />
+                      ) : (
+                        <>
+                          <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(20px)', opacity: 0.4, transform: 'scale(1.1)' }} />
+                          <img src={url} style={{ position: 'relative', width: '100%', height: '100%', objectFit: 'contain', zIndex: 1 }} />
+                        </>
+                      );
+                    })()}
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Gradient overlay for smooth transition to content */}
+                <div className="md:hidden" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100, background: 'linear-gradient(to top, var(--glass-bg) 0%, transparent 100%)', zIndex: 1 }} />
               </div>
             ) : (
-              <div style={{ width: '100%', height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', color: 'var(--text-muted)' }}>
-                <ImageIcon size={48} style={{ opacity: 0.3, marginBottom: 12 }} />
-                <span style={{ fontSize: '0.9rem' }}>No images available for this service</span>
+              /* Fallback Header */
+              <div className="service-modal-image-container shrink-0" style={{ height: 120, background: 'linear-gradient(135deg, rgba(212,175,55,0.15), rgba(6,5,10,1))', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <ImageIcon size={48} style={{ opacity: 0.1, color: 'var(--accent-gold)' }} />
               </div>
             )}
 
             {/* Content & Action */}
-            <div style={{ padding: '24px' }}>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2rem', color: 'var(--text-primary)', marginBottom: '1rem', lineHeight: 1.2 }}>
-                {service.title}
-              </h2>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '2rem' }}>
+            <div className="service-modal-text-container my-auto" style={{ gap: 16 }}>
+              <div>
+                <span style={{ color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.15em', fontSize: '0.75rem', fontWeight: 600 }}>
+                  {service.category}
+                </span>
+                <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', color: '#fff', marginTop: 6, lineHeight: 1.1 }}>
+                  {service.title}
+                </h2>
+              </div>
+              
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.95rem', lineHeight: 1.5, maxWidth: '600px', margin: '0 auto' }}>
                 {service.description}
               </p>
+
+              {/* Thumbnails */}
+              {images.length > 1 && (
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '4px' }}>
+                  {images.map((img, i) => {
+                    const isVideo = img.split('?')[0].toLowerCase().match(/\.(mp4|webm|mov)$/) || img.includes('video%2F');
+                    return (
+                      <motion.div
+                        key={i}
+                        onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(i); }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '10px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          border: i === currentImageIndex ? '2px solid var(--accent-gold)' : '2px solid rgba(255,255,255,0.1)',
+                          opacity: i === currentImageIndex ? 1 : 0.6,
+                          transition: 'all 0.3s ease',
+                        }}
+                      >
+                        {isVideo ? (
+                          <video src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline />
+                        ) : (
+                          <img src={img} alt={`Thumbnail ${i+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
               
               <button
                 onClick={handleAddToCart}
                 style={{
                   width: '100%',
+                  maxWidth: '300px',
+                  marginTop: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
-                  padding: '16px',
-                  borderRadius: 16,
+                  padding: '12px 24px',
+                  borderRadius: 100,
                   border: inCart ? '1px solid var(--accent-gold)' : 'none',
-                  background: inCart ? 'rgba(212, 175, 55, 0.1)' : 'var(--btn-primary-bg)',
-                  color: inCart ? 'var(--accent-gold)' : 'var(--btn-primary-text)',
-                  fontSize: '1.1rem',
+                  background: inCart ? 'rgba(212, 175, 55, 0.1)' : 'linear-gradient(135deg, #d4af37, #f3e5ab)',
+                  color: inCart ? 'var(--accent-gold)' : '#000',
+                  fontSize: '0.95rem',
                   fontWeight: 600,
                   cursor: inCart ? 'default' : 'pointer',
                   transition: 'all 0.3s ease',
+                  boxShadow: inCart ? 'none' : '0 8px 24px rgba(212,175,55,0.3)',
                 }}
                 disabled={inCart}
+                onMouseOver={(e) => { if(!inCart) e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)' }}
+                onMouseOut={(e) => { if(!inCart) e.currentTarget.style.transform = 'translateY(0) scale(1)' }}
               >
                 {inCart ? (
                   <>
-                    <Check size={20} />
-                    Added to Cart
+                    <Check size={18} /> Added to Cart
                   </>
                 ) : (
                   <>
-                    <ShoppingCart size={20} />
-                    Add to Cart
+                    <ShoppingCart size={18} /> Add to Cart
                   </>
                 )}
               </button>
@@ -161,6 +210,7 @@ export default function ServiceModal({ service, onClose }) {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

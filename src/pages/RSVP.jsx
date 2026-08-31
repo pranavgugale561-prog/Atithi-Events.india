@@ -87,13 +87,13 @@ export default function RSVP() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', paddingTop: 100 }}>
+    <div style={{ minHeight: '100vh', paddingTop: 'clamp(70px, 10vw, 100px)' }}>
       <div className="section-container" style={{ maxWidth: 700 }}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          style={{ textAlign: 'center', marginBottom: 48 }}
+          style={{ textAlign: 'center', marginBottom: 'clamp(32px, 5vw, 48px)' }}
         >
           <h1 className="section-title" style={{ fontStyle: 'italic' }}>
             You're Invited
@@ -108,7 +108,7 @@ export default function RSVP() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
-          style={{ textAlign: 'center', marginBottom: 48 }}
+          style={{ textAlign: 'center', marginBottom: 'clamp(32px, 5vw, 48px)' }}
         >
           <QRCode url={window.location.href} />
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 12 }}>

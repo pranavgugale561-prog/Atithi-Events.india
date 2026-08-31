@@ -75,19 +75,19 @@ export default function Timeline() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 100 }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 'clamp(70px, 10vw, 100px)' }}>
         <p style={{ color: 'var(--accent-gold)' }}>Loading timeline...</p>
       </div>
     );
   }
   return (
-    <div style={{ minHeight: '100vh', paddingTop: 100 }}>
+    <div style={{ minHeight: '100vh', paddingTop: 'clamp(70px, 10vw, 100px)' }}>
       <div className="section-container" style={{ maxWidth: 900 }}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          style={{ textAlign: 'center', marginBottom: 60 }}
+          style={{ textAlign: 'center', marginBottom: 'clamp(40px, 6vw, 60px)' }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}

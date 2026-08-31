@@ -1,24 +1,23 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { ChevronDown, Menu, X, Video, CalendarCheck, GraduationCap, Palette, Gamepad2, Mic2 } from 'lucide-react';
 
 const primaryLinks = [
-  { label: 'Home', to: '/' },
-  { label: 'Work Timeline', to: '/timeline' },
-  { label: 'Services', to: '/#services' },
-  { label: 'Catering & PRO', to: '/catering-pro' },
+  { label: 'Timeline', to: '/timeline' },
   { label: 'Photography', to: '/photography' },
+  { label: 'Catering', to: '/catering' },
+  { label: 'Reels', to: '/reels' },
   { label: 'Contact', to: '/contact' },
 ];
 
 const moreLinks = [
-  { label: 'Shaadi BTS', to: '/shaadi-bts' },
-  { label: 'Why Planner?', to: '/why-planner' },
-  { label: 'Academy', to: '/academy' },
-  { label: 'Mood Board', to: '/#mood-board' },
-  { label: 'Activity Zone', to: '/activity-zone' },
-  { label: 'Artists & Ent.', to: '/artists' },
+  { label: 'Shaadi BTS', to: '/shaadi-bts', icon: Video, desc: 'Unfiltered moments for your feed' },
+  { label: 'Why Planner?', to: '/why-planner', icon: CalendarCheck, desc: 'The architects of your dreams' },
+  { label: 'Academy', to: '/academy', icon: GraduationCap, desc: 'Master the art of event management' },
+  { label: 'Mood Board', to: '/#mood-board', icon: Palette, desc: 'Curated aesthetics & inspiration' },
+  { label: 'Activity Zone', to: '/activity-zone', icon: Gamepad2, desc: 'Interactive guest experiences' },
+  { label: 'Artists & Ent.', to: '/artists', icon: Mic2, desc: 'World-class entertainment' },
 ];
 
 const allLinks = [...primaryLinks, ...moreLinks];
@@ -142,17 +141,23 @@ export default function Navbar() {
                   className="glass"
                   style={{
                     position: 'absolute',
-                    top: 'calc(100% + 12px)',
-                    right: 0,
-                    minWidth: 180,
-                    padding: '10px 8px',
-                    borderRadius: 14,
+                    top: 'calc(100% + 16px)',
+                    right: -100,
+                    width: 650,
+                    padding: '24px',
+                    borderRadius: 24,
                     zIndex: 1001,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: 16,
+                    border: '1px solid rgba(212,175,55,0.2)',
+                    boxShadow: '0 30px 60px rgba(0,0,0,0.6)',
+                    background: 'linear-gradient(145deg, rgba(20,20,15,0.95) 0%, rgba(5,5,5,0.98) 100%)',
                   }}
                 >
+                  <div style={{ gridColumn: '1 / -1', padding: '0 8px 8px 8px', borderBottom: '1px solid rgba(212,175,55,0.1)', marginBottom: 8 }}>
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.2rem', color: 'var(--accent-gold)', fontStyle: 'italic' }}>Discover More</span>
+                  </div>
                   {moreLinks.map(link => (
                     <Link
                       key={link.to}
@@ -161,28 +166,62 @@ export default function Navbar() {
                         if (link.to.startsWith('/#') && location.pathname === '/') {
                           e.preventDefault();
                           handleNavClick(link.to);
+                        } else {
+                          setMoreOpen(false);
                         }
                       }}
                       style={{
-                        display: 'block',
-                        padding: '9px 14px',
-                        fontSize: '0.85rem',
-                        fontWeight: 500,
-                        color: isActive(link.to) ? 'var(--accent-gold)' : 'var(--text-secondary)',
-                        borderRadius: 10,
-                        transition: 'background 0.2s, color 0.2s',
-                        letterSpacing: '0.01em',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 16,
+                        padding: '16px',
+                        textDecoration: 'none',
+                        borderRadius: 16,
+                        transition: 'all 0.3s ease',
+                        border: '1px solid transparent',
                       }}
                       onMouseEnter={e => {
-                        e.currentTarget.style.background = 'rgba(212,175,55,0.1)';
-                        e.currentTarget.style.color = 'var(--accent-gold)';
+                        e.currentTarget.style.background = 'rgba(212,175,55,0.05)';
+                        e.currentTarget.style.border = '1px solid rgba(212,175,55,0.15)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
                       }}
                       onMouseLeave={e => {
                         e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = isActive(link.to) ? 'var(--accent-gold)' : 'var(--text-secondary)';
+                        e.currentTarget.style.border = '1px solid transparent';
+                        e.currentTarget.style.transform = 'translateY(0)';
                       }}
                     >
-                      {link.label}
+                      <div style={{
+                        padding: 12,
+                        borderRadius: 14,
+                        background: 'linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.02))',
+                        color: 'var(--accent-gold)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(212,175,55,0.2)'
+                      }}>
+                        {link.icon && <link.icon size={22} />}
+                      </div>
+                      <div>
+                        <div style={{ 
+                          fontSize: '1.1rem', 
+                          fontWeight: 600, 
+                          color: isActive(link.to) ? 'var(--accent-gold)' : 'var(--text-primary)',
+                          marginBottom: 4,
+                          fontFamily: "'Cormorant Garamond', serif",
+                          letterSpacing: '0.02em'
+                        }}>
+                          {link.label}
+                        </div>
+                        <div style={{
+                          fontSize: '0.85rem',
+                          color: 'rgba(255,255,255,0.6)',
+                          lineHeight: 1.4
+                        }}>
+                          {link.desc}
+                        </div>
+                      </div>
                     </Link>
                   ))}
                 </motion.div>
@@ -195,92 +234,37 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          className="mobile-menu-btn"
-          onClick={() => setMenuOpen(!menuOpen)}
-          style={{
-            display: 'none',
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-primary)',
-            cursor: 'pointer',
-            padding: 4,
-          }}
-        >
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        
       </motion.nav>
 
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            style={{
-              position: 'fixed',
-              top: 84,
-              left: 16,
-              right: 16,
-              zIndex: 998,
-              padding: '16px',
-              borderRadius: '18px',
-            }}
-            className="glass"
-          >
-            {allLinks.map(link => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={(e) => {
-                  if (link.to.startsWith('/#') && location.pathname === '/') {
-                    e.preventDefault();
-                    handleNavClick(link.to);
-                  }
-                }}
-                style={{
-                  display: 'block',
-                  padding: '11px 12px',
-                  fontSize: '0.95rem',
-                  fontWeight: 500,
-                  color: isActive(link.to) ? 'var(--accent-gold)' : 'var(--text-primary)',
-                  borderBottom: '1px solid var(--glass-border)',
-                  borderRadius: 10,
-                  transition: 'background 0.2s',
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link
-              to="/admin/login"
-              onClick={() => setMenuOpen(false)}
-              style={{
-                display: 'block',
-                marginTop: 10,
-                padding: '11px 12px',
-                fontSize: '0.95rem',
-                fontWeight: 600,
-                color: 'var(--accent-gold)',
-                borderRadius: 10,
-              }}
-            >
-              Admin Panel
-            </Link>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      
 
-      <style>{`
-        .glass-nav { }
-        .nav-logo-img {
-          height: 46px;
-          width: auto;
-          object-fit: contain;
-          border-radius: 10px;
-        }
+        <style>{`
+          .glass-nav { }
+          
+          @keyframes logoRichGlow {
+            0% {
+              filter: drop-shadow(0px 0px 8px rgba(212, 175, 55, 0.3)) brightness(1);
+              transform: scale(1);
+            }
+            50% {
+              filter: drop-shadow(0px 0px 20px rgba(212, 175, 55, 0.8)) brightness(1.15);
+              transform: scale(1.04);
+            }
+            100% {
+              filter: drop-shadow(0px 0px 8px rgba(212, 175, 55, 0.3)) brightness(1);
+              transform: scale(1);
+            }
+          }
+
+          .nav-logo-img {
+            height: 46px;
+            width: auto;
+            object-fit: contain;
+            border-radius: 10px;
+            animation: logoRichGlow 3.5s ease-in-out infinite;
+            will-change: filter, transform;
+          }
         .nav-link {
           padding: 6px 12px;
           font-size: 0.82rem;
@@ -309,7 +293,7 @@ export default function Navbar() {
 
         @media (max-width: 900px) {
           .desktop-nav-links { display: none !important; }
-          .mobile-menu-btn { display: block !important; }
+          
         }
         @media (max-width: 768px) {
           .glass-nav { padding: 0 14px !important; }

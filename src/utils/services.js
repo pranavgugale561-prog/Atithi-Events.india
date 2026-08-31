@@ -105,55 +105,73 @@ async function getCollectionRef(collectionName) {
  */
 
 export async function getServices() {
-  const { getDocs } = await import('firebase/firestore');
-  const coll = await getCollectionRef('services');
-  if (!coll) return DEFAULT_SERVICES;
+  try {
+    const { getDocs } = await import('firebase/firestore');
+    const coll = await getCollectionRef('services');
+    if (!coll) return DEFAULT_SERVICES;
 
-  const snapshot = await getDocs(coll);
-  if (snapshot.empty) {
-    // Initial load: Populating Firestore with defaults
-    console.log('[Firestore] Populating default services...');
-    const { doc, writeBatch } = await import('firebase/firestore');
-    const db = await getDB();
-    const batch = writeBatch(db);
-    
-    DEFAULT_SERVICES.forEach(s => {
-      const ref = doc(coll, s.id);
-      batch.set(ref, s);
-    });
-    await batch.commit();
+    const snapshot = await getDocs(coll);
+    if (snapshot.empty) {
+      // Initial load: Populating Firestore with defaults
+      console.log('[Firestore] Populating default services...');
+      const { doc, writeBatch } = await import('firebase/firestore');
+      const db = await getDB();
+      const batch = writeBatch(db);
+      
+      DEFAULT_SERVICES.forEach(s => {
+        const ref = doc(coll, s.id);
+        batch.set(ref, s);
+      });
+      try {
+        await batch.commit();
+      } catch (err) {
+        console.warn("Failed to write default services to Firestore", err);
+      }
+      return DEFAULT_SERVICES;
+    }
+
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  } catch (err) {
+    console.warn("Failed to fetch services from Firestore", err);
     return DEFAULT_SERVICES;
   }
-
-  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 }
 
 export async function addService(service) {
-  const { addDoc } = await import('firebase/firestore');
-  const coll = await getCollectionRef('services');
-  if (!coll) return null;
-
-  const docRef = await addDoc(coll, { ...service, createdAt: new Date().toISOString() });
+  const newService = { ...service, id: 'srv_' + Date.now(), createdAt: new Date().toISOString() };
+  try {
+    const { addDoc } = await import('firebase/firestore');
+    const coll = await getCollectionRef('services');
+    if (coll) {
+      const docRef = await addDoc(coll, newService);
+      newService.id = docRef.id;
+    }
+  } catch(e) { console.warn('addService fb fail'); }
+  DEFAULT_SERVICES.push(newService);
   await logActivity('service_add', `Added service: ${service.title}`);
-  return { ...service, id: docRef.id };
+  return newService;
 }
 
 export async function updateService(id, updates) {
-  const { updateDoc } = await import('firebase/firestore');
-  const ref = await getDocRef('services', id);
-  if (!ref) return null;
-
-  await updateDoc(ref, updates);
+  try {
+    const { updateDoc } = await import('firebase/firestore');
+    const ref = await getDocRef('services', id);
+    if (ref) await updateDoc(ref, updates);
+  } catch(e) { console.warn('updateService fb fail'); }
+  const idx = DEFAULT_SERVICES.findIndex(s => s.id === id);
+  if (idx !== -1) DEFAULT_SERVICES[idx] = { ...DEFAULT_SERVICES[idx], ...updates };
   await logActivity('service_update', `Updated service: ${id}`);
   return { id, ...updates };
 }
 
 export async function deleteService(id) {
-  const { deleteDoc } = await import('firebase/firestore');
-  const ref = await getDocRef('services', id);
-  if (!ref) return;
-
-  await deleteDoc(ref);
+  try {
+    const { deleteDoc } = await import('firebase/firestore');
+    const ref = await getDocRef('services', id);
+    if (ref) await deleteDoc(ref);
+  } catch(e) { console.warn('deleteService fb fail'); }
+  const idx = DEFAULT_SERVICES.findIndex(s => s.id === id);
+  if (idx !== -1) DEFAULT_SERVICES.splice(idx, 1);
   await logActivity('service_delete', `Deleted service: ${id}`);
 }
 
@@ -281,76 +299,118 @@ export function imageToCompressedBase64(file, maxWidth = 600, quality = 0.6) {
   });
 }
 
+export async function uploadMediaToStorage(file) {
+  try {
+    const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    const { getApp } = await import('firebase/app');
+    const storage = getStorage(getApp());
+    const uniqueName = `uploads/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+    const storageRef = ref(storage, uniqueName);
+    
+    // Upload the file
+    await uploadBytes(storageRef, file);
+    
+    // Return the download URL
+    return await getDownloadURL(storageRef);
+  } catch (error) {
+    console.error("Firebase Storage Upload Error:", error);
+    throw new Error("Failed to upload media to Storage. Make sure Firebase Storage is enabled and rules allow writes.");
+  }
+}
+
 /**
  * ─── Activities ────────────────────────────────────────────────────────────
  */
 
+let _cachedActivities = null;
 export async function getActivities() {
-  const { getDocs } = await import('firebase/firestore');
-  const coll = await getCollectionRef('activities');
-  if (!coll) return [];
-
-  const snapshot = await getDocs(coll);
-  if (snapshot.empty) {
-    console.log('[Firestore] Populating default activities...');
-    const { doc, writeBatch } = await import('firebase/firestore');
-    const db = await getDB();
-    
-    let defaultActivities = [];
+  if (!_cachedActivities) {
+    _cachedActivities = [];
     let idCounter = 1;
     activityZoneData.forEach(cat => {
       cat.items.forEach(item => {
-        defaultActivities.push({
-          id: `act_${idCounter++}`,
-          title: item,
-          category: cat.category,
-          description: '',
-          images: [],
-          icon: 'star'
+        _cachedActivities.push({
+          id: `act_${idCounter++}`, title: item, category: cat.category, description: '', images: [], icon: 'star'
         });
       });
     });
-
-    // Write in chunks of 500 (Firestore limit)
-    for (let i = 0; i < defaultActivities.length; i += 500) {
-      const chunk = defaultActivities.slice(i, i + 500);
-      const chunkBatch = writeBatch(db);
-      chunk.forEach(act => {
-        const ref = doc(coll, act.id);
-        chunkBatch.set(ref, act);
-      });
-      await chunkBatch.commit();
-    }
-    
-    return defaultActivities;
   }
+  const generateDefaults = () => _cachedActivities;
+  try {
+    const { getDocs } = await import('firebase/firestore');
+    const coll = await getCollectionRef('activities');
+    if (!coll) return generateDefaults();
 
-  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+    const snapshot = await getDocs(coll);
+    if (snapshot.empty) {
+      console.log('[Firestore] Populating default activities...');
+      const { doc, writeBatch } = await import('firebase/firestore');
+      const db = await getDB();
+      const defaultActivities = generateDefaults();
+      
+      try {
+        for (let i = 0; i < defaultActivities.length; i += 500) {
+          const chunk = defaultActivities.slice(i, i + 500);
+          const chunkBatch = writeBatch(db);
+          chunk.forEach(act => {
+            const ref = doc(coll, act.id);
+            chunkBatch.set(ref, act);
+          });
+          await chunkBatch.commit();
+        }
+      } catch (err) {
+        console.warn("Failed to write default activities to Firestore", err);
+      }
+      
+      return defaultActivities;
+    }
+
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  } catch (err) {
+    console.warn("Failed to fetch activities from Firestore", err);
+    return generateDefaults();
+  }
 }
 
 export async function addActivity(activity) {
-  const { addDoc } = await import('firebase/firestore');
-  const coll = await getCollectionRef('activities');
-  if (!coll) return null;
-  const docRef = await addDoc(coll, { ...activity, createdAt: new Date().toISOString() });
+  const newObj = { ...activity, id: 'act_' + Date.now(), createdAt: new Date().toISOString() };
+  try {
+    const { addDoc } = await import('firebase/firestore');
+    const coll = await getCollectionRef('activities');
+    if (coll) {
+      const docRef = await addDoc(coll, newObj);
+      newObj.id = docRef.id;
+    }
+  } catch(e) {}
+  if (_cachedActivities) _cachedActivities.push(newObj);
   await logActivity('service_add', `Added activity: ${activity.title}`);
-  return { ...activity, id: docRef.id };
+  return newObj;
 }
 
 export async function updateActivity(id, updates) {
-  const { updateDoc } = await import('firebase/firestore');
-  const ref = await getDocRef('activities', id);
-  if (!ref) return null;
-  await updateDoc(ref, updates);
-  await logActivity('service_update', `Updated activity: ${updates.title || id}`);
+  try {
+    const { updateDoc } = await import('firebase/firestore');
+    const ref = await getDocRef('activities', id);
+    if (ref) await updateDoc(ref, updates);
+  } catch(e) {}
+  if (_cachedActivities) {
+    const idx = _cachedActivities.findIndex(s => s.id === id);
+    if (idx !== -1) _cachedActivities[idx] = { ..._cachedActivities[idx], ...updates };
+  }
+  await logActivity('service_update', `Updated activity: ${id}`);
   return { id, ...updates };
 }
 
 export async function deleteActivity(id) {
-  const { deleteDoc } = await import('firebase/firestore');
-  const ref = await getDocRef('activities', id);
-  if (!ref) return;
-  await deleteDoc(ref);
+  try {
+    const { deleteDoc } = await import('firebase/firestore');
+    const ref = await getDocRef('activities', id);
+    if (ref) await deleteDoc(ref);
+  } catch(e) {}
+  if (_cachedActivities) {
+    const idx = _cachedActivities.findIndex(s => s.id === id);
+    if (idx !== -1) _cachedActivities.splice(idx, 1);
+  }
   await logActivity('service_delete', `Deleted activity: ${id}`);
 }
 
@@ -358,70 +418,304 @@ export async function deleteActivity(id) {
  * ─── Artists ─────────────────────────────────────────────────────────────
  */
 
+let _cachedArtists = null;
 export async function getArtists() {
-  const { getDocs } = await import('firebase/firestore');
-  const coll = await getCollectionRef('artists');
-  if (!coll) return [];
-
-  const snapshot = await getDocs(coll);
-  if (snapshot.empty) {
-    console.log('[Firestore] Populating default artists...');
-    const { doc, writeBatch } = await import('firebase/firestore');
-    const db = await getDB();
-    
-    let defaultArtists = [];
+  if (!_cachedArtists) {
+    _cachedArtists = [];
     let idCounter = 1;
     artistSectionData.forEach(cat => {
       cat.items.forEach(item => {
-        defaultArtists.push({
-          id: `art_${idCounter++}`,
-          title: item,
-          category: cat.category,
-          description: '',
-          images: [],
-          icon: 'star'
+        _cachedArtists.push({
+          id: `art_${idCounter++}`, title: item, category: cat.category, description: '', images: [], icon: 'star'
         });
       });
     });
-
-    for (let i = 0; i < defaultArtists.length; i += 500) {
-      const chunk = defaultArtists.slice(i, i + 500);
-      const chunkBatch = writeBatch(db);
-      chunk.forEach(art => {
-        const ref = doc(coll, art.id);
-        chunkBatch.set(ref, art);
-      });
-      await chunkBatch.commit();
-    }
-    
-    return defaultArtists;
   }
+  const generateDefaults = () => _cachedArtists;
+  try {
+    const { getDocs } = await import('firebase/firestore');
+    const coll = await getCollectionRef('artists');
+    if (!coll) return generateDefaults();
 
-  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+    const snapshot = await getDocs(coll);
+    if (snapshot.empty) {
+      console.log('[Firestore] Populating default artists...');
+      const { doc, writeBatch } = await import('firebase/firestore');
+      const db = await getDB();
+      const defaultArtists = generateDefaults();
+      
+      try {
+        for (let i = 0; i < defaultArtists.length; i += 500) {
+          const chunk = defaultArtists.slice(i, i + 500);
+          const chunkBatch = writeBatch(db);
+          chunk.forEach(art => {
+            const ref = doc(coll, art.id);
+            chunkBatch.set(ref, art);
+          });
+          await chunkBatch.commit();
+        }
+      } catch (err) {
+        console.warn("Failed to write default artists to Firestore", err);
+      }
+      
+      return defaultArtists;
+    }
+
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  } catch (err) {
+    console.warn("Failed to fetch artists from Firestore", err);
+    return generateDefaults();
+  }
 }
 
 export async function addArtist(artist) {
-  const { addDoc } = await import('firebase/firestore');
-  const coll = await getCollectionRef('artists');
-  if (!coll) return null;
-  const docRef = await addDoc(coll, { ...artist, createdAt: new Date().toISOString() });
+  const newObj = { ...artist, id: 'art_' + Date.now(), createdAt: new Date().toISOString() };
+  try {
+    const { addDoc } = await import('firebase/firestore');
+    const coll = await getCollectionRef('artists');
+    if (coll) {
+      const docRef = await addDoc(coll, newObj);
+      newObj.id = docRef.id;
+    }
+  } catch(e) {}
+  if (_cachedArtists) _cachedArtists.push(newObj);
   await logActivity('service_add', `Added artist: ${artist.title}`);
-  return { ...artist, id: docRef.id };
+  return newObj;
 }
 
 export async function updateArtist(id, updates) {
-  const { updateDoc } = await import('firebase/firestore');
-  const ref = await getDocRef('artists', id);
-  if (!ref) return null;
-  await updateDoc(ref, updates);
-  await logActivity('service_update', `Updated artist: ${updates.title || id}`);
+  try {
+    const { updateDoc } = await import('firebase/firestore');
+    const ref = await getDocRef('artists', id);
+    if (ref) await updateDoc(ref, updates);
+  } catch(e) {}
+  if (_cachedArtists) {
+    const idx = _cachedArtists.findIndex(s => s.id === id);
+    if (idx !== -1) _cachedArtists[idx] = { ..._cachedArtists[idx], ...updates };
+  }
+  await logActivity('service_update', `Updated artist: ${id}`);
   return { id, ...updates };
 }
 
 export async function deleteArtist(id) {
+  try {
+    const { deleteDoc } = await import('firebase/firestore');
+    const ref = await getDocRef('artists', id);
+    if (ref) await deleteDoc(ref);
+  } catch(e) {}
+  if (_cachedArtists) {
+    const idx = _cachedArtists.findIndex(s => s.id === id);
+    if (idx !== -1) _cachedArtists.splice(idx, 1);
+  }
+  await logActivity('service_delete', `Deleted artist: ${id}`);
+}
+
+/**
+ * ─── Hero Images ────────────────────────────────────────────────────────
+ */
+
+export async function getHeroImages() {
+  const generateDefaults = () => [
+    { id: 'default', url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=1920&auto=format&fit=crop', isDefault: true }
+  ];
+
+  try {
+    const { getDocs } = await import('firebase/firestore');
+    const coll = await getCollectionRef('heroImages');
+    if (!coll) return generateDefaults();
+
+    const snapshot = await getDocs(coll);
+    if (snapshot.empty) {
+      return generateDefaults();
+    }
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })).sort((a, b) => (a.order || 0) - (b.order || 0));
+  } catch (err) {
+    console.warn("Failed to fetch hero images from Firestore", err);
+    return generateDefaults();
+  }
+}
+
+export async function addHeroImage(image) {
+  const { addDoc } = await import('firebase/firestore');
+  const coll = await getCollectionRef('heroImages');
+  if (!coll) return null;
+  const docRef = await addDoc(coll, { ...image, createdAt: new Date().toISOString() });
+  await logActivity('service_add', `Added new hero image`);
+  return { ...image, id: docRef.id };
+}
+
+export async function updateHeroImage(id, updates) {
+  const { updateDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('heroImages', id);
+  if (!ref) return null;
+  await updateDoc(ref, updates);
+  await logActivity('service_update', `Updated hero image`);
+  return { id, ...updates };
+}
+
+export async function deleteHeroImage(id) {
   const { deleteDoc } = await import('firebase/firestore');
-  const ref = await getDocRef('artists', id);
+  const ref = await getDocRef('heroImages', id);
   if (!ref) return;
   await deleteDoc(ref);
-  await logActivity('service_delete', `Deleted artist: ${id}`);
+  await logActivity('service_delete', `Deleted hero image`);
+}
+/**
+ * Reels 
+ */
+
+export async function getReels() {
+  const { getDocs } = await import('firebase/firestore');
+  const coll = await getCollectionRef('reels');
+  if (!coll) return [];
+  const snapshot = await getDocs(coll);
+  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+export async function addReel(reelData) {
+  const { addDoc } = await import('firebase/firestore');
+  const coll = await getCollectionRef('reels');
+  if (!coll) return null;
+  
+  const payload = {
+    ...reelData,
+    createdAt: Date.now()
+  };
+  const docRef = await addDoc(coll, payload);
+  await logActivity('service_add', `Added Reel: ${reelData.title || 'Untitled'}`);
+  return { id: docRef.id, ...payload };
+}
+
+export async function deleteReel(id) {
+  const { deleteDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('reels', id);
+  if (!ref) return;
+  await deleteDoc(ref);
+  await logActivity('service_delete', `Deleted Reel: ${id}`);
+}
+// Customers (Chatbot Leads)
+export async function getCustomers() {
+  const { getDocs } = await import('firebase/firestore');
+  const coll = await getCollectionRef('customers');
+  if (!coll) return [];
+  const snapshot = await getDocs(coll);
+  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+export async function getCustomerByPhone(phone) {
+  const { getDocs, query, where } = await import('firebase/firestore');
+  const coll = await getCollectionRef('customers');
+  if (!coll) return null;
+  const q = query(coll, where('phone', '==', phone));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+}
+
+export async function addCustomer(customerData) {
+  const { addDoc } = await import('firebase/firestore');
+  const coll = await getCollectionRef('customers');
+  if (!coll) return null;
+  
+  const payload = {
+    ...customerData,
+    createdAt: Date.now()
+  };
+  const docRef = await addDoc(coll, payload);
+  await logActivity('lead_add', `New Chat Customer: ${customerData.name}`);
+  return { id: docRef.id, ...payload };
+}
+
+export async function updateCustomer(id, data) {
+  const { updateDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('customers', id);
+  if (!ref) return;
+  await updateDoc(ref, data);
+}
+
+export async function deleteCustomer(id) {
+  const { deleteDoc } = await import('firebase/firestore');
+  const ref = await getDocRef('customers', id);
+  if (!ref) return;
+  await deleteDoc(ref);
+  await logActivity('lead_delete', 'Deleted chat customer record');
+}
+
+
+
+/**
+ * Journey Carousel Images
+ */
+let _cachedJourneyImages = null;
+export async function getJourneyImages() {
+  if (!_cachedJourneyImages) {
+    _cachedJourneyImages = [
+      { id: 'j1', url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=600&auto=format&fit=crop', order: 0 },
+      { id: 'j2', url: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=600&auto=format&fit=crop', order: 1 },
+      { id: 'j3', url: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=600&auto=format&fit=crop', order: 2 },
+      { id: 'j4', url: 'https://images.unsplash.com/photo-1543329729-eb741005ca65?q=80&w=600&auto=format&fit=crop', order: 3 },
+      { id: 'j5', url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=600&auto=format&fit=crop', order: 4 },
+      { id: 'j6', url: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=600&auto=format&fit=crop', order: 5 }
+    ];
+  }
+  const generateDefaults = () => _cachedJourneyImages;
+
+  try {
+    const { getDocs } = await import('firebase/firestore');
+    const coll = await getCollectionRef('journeyImages');
+    if (!coll) return generateDefaults();
+
+    const snapshot = await getDocs(coll);
+    if (snapshot.empty) return generateDefaults();
+
+    const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    items.sort((a, b) => (a.order || 0) - (b.order || 0));
+    _cachedJourneyImages = items;
+    return items;
+  } catch (err) {
+    console.warn("Failed to fetch journey images from Firestore");
+    return generateDefaults();
+  }
+}
+
+export async function addJourneyImage(image) {
+  const newObj = { ...image, id: 'j_' + Date.now(), createdAt: new Date().toISOString() };
+  try {
+    const { addDoc } = await import('firebase/firestore');
+    const coll = await getCollectionRef('journeyImages');
+    if (coll) {
+      const docRef = await addDoc(coll, newObj);
+      newObj.id = docRef.id;
+    }
+  } catch (err) {}
+  if (_cachedJourneyImages) _cachedJourneyImages.push(newObj);
+  await logActivity('service_add', `Added new journey image`);
+  return newObj;
+}
+
+export async function updateJourneyImage(id, updates) {
+  try {
+    const { updateDoc } = await import('firebase/firestore');
+    const ref = await getDocRef('journeyImages', id);
+    if (ref) await updateDoc(ref, updates);
+  } catch (err) {}
+  if (_cachedJourneyImages) {
+    const idx = _cachedJourneyImages.findIndex(i => i.id === id);
+    if (idx !== -1) _cachedJourneyImages[idx] = { ..._cachedJourneyImages[idx], ...updates };
+  }
+  await logActivity('service_update', `Updated journey image`);
+  return { id, ...updates };
+}
+
+export async function deleteJourneyImage(id) {
+  try {
+    const { deleteDoc } = await import('firebase/firestore');
+    const ref = await getDocRef('journeyImages', id);
+    if (ref) await deleteDoc(ref);
+  } catch (err) {}
+  if (_cachedJourneyImages) {
+    const idx = _cachedJourneyImages.findIndex(i => i.id === id);
+    if (idx !== -1) _cachedJourneyImages.splice(idx, 1);
+  }
+  await logActivity('service_delete', `Deleted journey image`);
 }

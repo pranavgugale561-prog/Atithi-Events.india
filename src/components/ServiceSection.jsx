@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion, useMotionValue, AnimatePresence } from 'framer-motion';
 import { getServices } from '../utils/services';
 import { useCart } from './CartContext';
+import { shareItem } from '../utils/shareUtils';
 import ServiceModal from './ServiceModal';
 import {
   Hotel, Truck, Instagram, Palette, ChefHat, Camera, Music, MapPin,
-  Briefcase, Star, Gem, Flower2, PartyPopper, Gift, ShoppingCart, Check,
+  Briefcase, Star, Gem, Flower2, PartyPopper, Gift, ShoppingCart, Check, Share2,
   Hash, FileText, Video, Image, MessageCircle, Phone, Radio, Film,
   HardDrive, CalendarClock, Wallet, Shield, Monitor, Users, HeartPulse,
   ShoppingBag, Car, Presentation, ShieldCheck, Scissors, Home, Box,
@@ -102,160 +103,179 @@ function GlassCard({ service, index, onSelect }) {
 
   const Icon = ICON_MAP[service.icon] || Star;
 
+  const bgImage = hasImages ? images[0] : null;
+
   return (
     <motion.div
-      className={`glass-card ${service.span || ''}`}
+      className={`glass-card service-card ${service.span || ''}`}
       onClick={() => onSelect(service)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        padding: hasImages ? '0' : 'clamp(24px, 3vw, 36px)',
-        paddingBottom: hasImages ? 'clamp(24px, 3vw, 36px)' : undefined,
+        position: 'relative',
+        minHeight: 320,
         display: 'flex',
         flexDirection: 'column',
-        gap: 16,
+        justifyContent: 'flex-end',
+        padding: 'clamp(20px, 2.5vw, 28px)',
         boxShadow: shadow,
         rotateX: y,
         rotateY: x,
         transformPerspective: 800,
         cursor: 'pointer',
         overflow: 'hidden',
+        border: '1px solid rgba(255,255,255,0.05)',
       }}
-      whileHover={{ 
-        scale: 1.02, 
-        y: -10,
-        backgroundColor: 'rgba(212, 175, 55, 0.08)',
-        transition: { duration: 0.3 }
-      }}
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.4 }}
-      transition={{ 
-        delay: (index % 4) * 0.1, 
-        duration: 0.7,
-        ease: [0.22, 1, 0.36, 1]
+      whileHover="hover"
+      initial="initial"
+      whileInView="animate"
+      viewport={{ once: true, amount: 0.2 }}
+      variants={{
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: (index % 4) * 0.1 } },
+        hover: { y: -8, scale: 1.02, transition: { duration: 0.4, ease: "easeOut" } }
       }}
     >
-      {/* Image thumbnail strip */}
-      {hasImages && (
-        <div style={{
-          display: 'flex',
-          gap: 3,
-          position: 'relative',
-          height: 120,
-          overflow: 'hidden',
-          borderRadius: '24px 24px 0 0',
-        }}>
-          {images.slice(0, 3).map((src, i) => (
-            <img key={i} src={src} alt="" style={{
-              flex: i === 0 ? 2 : 1,
-              objectFit: 'cover',
-              height: '100%',
-              minWidth: 0,
-              filter: 'brightness(0.82)',
-            }} />
-          ))}
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to bottom, transparent 40%, rgba(10,10,10,0.9) 100%)',
-          }} />
-          <span style={{
-            position: 'absolute', bottom: 8, right: 10,
-            fontSize: '0.68rem', fontWeight: 600, color: '#fff',
-            background: 'rgba(212,175,55,0.85)', padding: '2px 8px',
-            borderRadius: 20, backdropFilter: 'blur(4px)',
-          }}>📷 {images.length} photo{images.length > 1 ? 's' : ''}</span>
-        </div>
+      {/* Background Image with slow zoom on hover */}
+      {bgImage && (
+        <motion.div
+          variants={{
+            initial: { scale: 1 },
+            hover: { scale: 1.1, transition: { duration: 0.8, ease: "easeOut" } }
+          }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 0,
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
       )}
 
-      {/* Card content — padded separately when images exist */}
-      <div style={{ padding: hasImages ? 'clamp(16px, 2vw, 24px)' : '0', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-      <motion.div 
-        whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: 16,
-          background: 'var(--glass-bg)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '1px solid var(--glass-border)',
-          transition: 'all 0.3s ease'
-        }}
-      >
-        <Icon size={24} color="var(--accent-gold)" />
-      </motion.div>
+      {/* Premium Gradient Overlay */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 1,
+        background: bgImage 
+          ? 'linear-gradient(to top, rgba(6,5,10,0.95) 0%, rgba(6,5,10,0.7) 40%, rgba(6,5,10,0.2) 100%)'
+          : 'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(6,5,10,0.9) 100%)',
+      }} />
 
-      <h3 style={{
-        fontSize: 'clamp(1.2rem, 2vw, 1.5rem)',
-        fontFamily: "'Cormorant Garamond', serif",
-        fontWeight: 500,
-        color: 'var(--text-primary)',
-      }}>
-        {service.title}
-      </h3>
+      {/* Card Content - elevated above background */}
+      <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', gap: 14, height: '100%' }}>
+        
+        {/* Top Row: Icon & Photo Badge */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'auto', gap: 6 }}>
+          <motion.div 
+            className="card-top-icon"
+            variants={{ hover: { rotate: [0, -10, 10, 0], scale: 1.1 } }}
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: bgImage ? 'rgba(0,0,0,0.4)' : 'var(--glass-bg)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid rgba(212,175,55,0.3)',
+              flexShrink: 0
+            }}
+          >
+            <Icon size={22} color="var(--accent-gold)" />
+          </motion.div>
 
-      <p style={{
-        fontSize: '0.9rem',
-        color: 'var(--text-secondary)',
-        lineHeight: 1.6,
-      }}>
-        {service.description}
-      </p>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-        <span style={{
-          display: 'inline-block',
-          padding: '4px 12px',
-          borderRadius: 8,
-          background: 'var(--glass-bg)',
-          fontSize: '0.75rem',
-          color: 'var(--text-muted)',
-          fontWeight: 500,
-          border: '1px solid var(--glass-border)',
-        }}>
-          {service.category}
-        </span>
-
-        <motion.button
-          onClick={(e) => { e.stopPropagation(); addToCart(service); }}
-          whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(212, 175, 55, 0.4)' }}
-          whileTap={{ scale: 0.9 }}
-          animate={inCart ? { scale: [1, 1.2, 1] } : {}}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: inCart ? '8px 16px' : '8px 16px',
-            borderRadius: 12,
-            border: inCart ? '1px solid var(--accent-gold)' : '1px solid var(--glass-border)',
-            background: inCart
-              ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(184, 134, 11, 0.1))'
-              : 'var(--glass-bg)',
-            color: inCart ? 'var(--accent-gold)' : 'var(--text-secondary)',
-            cursor: inCart ? 'default' : 'pointer',
-            fontFamily: "'Inter', sans-serif",
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            transition: 'all 0.3s ease',
-          }}
-          disabled={inCart}
-        >
-          {inCart ? (
-            <>
-              <Check size={14} />
-              Added
-            </>
-          ) : (
-            <>
-              <ShoppingCart size={14} />
-              Add to Cart
-            </>
+          {hasImages && (
+            <span className="card-photo-badge" style={{
+              fontSize: '0.7rem', fontWeight: 600, color: '#fff',
+              background: 'rgba(212,175,55,0.85)', padding: '4px 10px',
+              borderRadius: 20, backdropFilter: 'blur(4px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}>
+              📷 {images.length} photo{images.length > 1 ? 's' : ''}
+            </span>
           )}
-        </motion.button>
+        </div>
+
+        {/* Text Content */}
+        <div style={{ marginTop: 20 }}>
+          <h3 style={{
+            fontSize: 'clamp(1.2rem, 2vw, 1.4rem)',
+            fontFamily: "'Cormorant Garamond', serif",
+            fontWeight: 600,
+            color: '#fff',
+            marginBottom: 8,
+            textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+          }}>
+            {service.title}
+          </h3>
+
+          <p style={{
+            fontSize: '0.85rem',
+            color: 'rgba(255,255,255,0.75)',
+            lineHeight: 1.5,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}>
+            {service.description}
+          </p>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+          <span style={{
+            fontSize: '0.75rem',
+            color: 'var(--accent-gold)',
+            fontWeight: 500,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase'
+          }}>
+            {service.category}
+          </span>
+
+          <motion.button
+            className="card-button"
+            onClick={(e) => { e.stopPropagation(); addToCart(service); }}
+            whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(212, 175, 55, 0.4)' }}
+            whileTap={{ scale: 0.95 }}
+            animate={inCart ? { scale: [1, 1.1, 1] } : {}}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '8px 14px',
+              borderRadius: 12,
+              border: inCart ? '1px solid var(--accent-gold)' : '1px solid rgba(255,255,255,0.2)',
+              background: inCart ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.05)',
+              backdropFilter: 'blur(4px)',
+              color: inCart ? 'var(--accent-gold)' : '#fff',
+              cursor: inCart ? 'default' : 'pointer',
+              fontFamily: "'Inter', sans-serif",
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              transition: 'all 0.3s ease',
+            }}
+            disabled={inCart}
+          >
+            {inCart ? (
+              <>
+                <Check size={14} /> Added
+              </>
+            ) : (
+              <>
+                <ShoppingCart size={14} /> Add to Cart
+              </>
+            )}
+          </motion.button>
+        </div>
       </div>
-      </div>{/* end inner padding div */}
     </motion.div>
   );
 }

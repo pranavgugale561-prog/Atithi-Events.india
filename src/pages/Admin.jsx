@@ -7,13 +7,49 @@ import {
   Hotel, Truck, Instagram, Palette, ChefHat, Camera, Music, MapPin,
   Star, Gem, Flower2, PartyPopper, Gift, ImagePlus, Phone, Mail,
   Calendar, Wifi, Globe, Shield, CheckCircle, AlertCircle, Zap, MessageSquare,
-  RefreshCw
+  RefreshCw, Video, User
 } from 'lucide-react';
-import { getServices, addService, updateService, deleteService, getLeads, deleteLead, imageToCompressedBase64, getActivities, addActivity, updateActivity, deleteActivity, getArtists, addArtist, updateArtist, deleteArtist } from '../utils/services';
+import { 
+  getServices, addService, updateService, deleteService, 
+  getLeads, deleteLead, imageToCompressedBase64, uploadMediaToStorage, 
+  getActivities, addActivity, updateActivity, deleteActivity, 
+  getArtists, addArtist, updateArtist, deleteArtist, 
+  getHeroImages, addHeroImage, deleteHeroImage,
+  getJourneyImages, addJourneyImage, updateJourneyImage, deleteJourneyImage,
+  getReels, addReel, deleteReel,
+  getCustomers
+} from '../utils/services';
 import { getActivityLog, clearActivityLog, logActivity } from '../utils/activityLog';
 import { getTimelineEvents, addTimelineEvent, deleteTimelineEvent } from '../utils/timeline';
 import { getTrafficData, getGlobalTrafficData, useActiveSessions } from '../hooks/useTraffic';
 import { trackEvent } from '../firebase';
+
+
+function exportCSV(data, filename) {
+  if (!data || !data.length) {
+    alert("No data to export.");
+    return;
+  }
+  const headers = Object.keys(data[0]).filter(k => k !== 'images' && k !== 'icon').join(',');
+  const rows = data.map(obj => 
+    Object.keys(obj)
+      .filter(k => k !== 'images' && k !== 'icon')
+      .map(k => {
+        let val = obj[k] || '';
+        if (typeof val === 'object') val = JSON.stringify(val);
+        return '"' + String(val).replace(/"/g, '""') + '"';
+      })
+      .join(',')
+  );
+  const csv = [headers, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
 
 const ICON_OPTIONS = [
   'hotel', 'truck', 'instagram', 'palette', 'chefHat', 'camera',
@@ -32,10 +68,14 @@ const SPAN_OPTIONS = ['', 'span-2', 'span-3', 'span-2 row-2'];
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'leads',    label: 'Leads',      icon: Users },
+  { id: 'customers',label: 'Customers',  icon: User },
   { id: 'traffic',  label: 'Traffic',    icon: BarChart3 },
   { id: 'security', label: 'Security',   icon: Shield },
   { id: 'activity', label: 'Activity',   icon: Activity },
   { id: 'timeline', label: 'Timeline',   icon: Calendar },
+  { id: 'hero',     label: 'Hero Backgrounds', icon: ImagePlus },
+    { id: 'carousel', label: 'Hero Banner Images', icon: ImagePlus },
+  { id: 'reels',    label: 'Instagram Reels', icon: Video },
   { id: 'services', label: 'Services',   icon: Briefcase },
   { id: 'activities', label: 'Activity Zone', icon: Palette },
   { id: 'artists', label: 'Artists', icon: Music },
@@ -268,7 +308,6 @@ function DashboardTab({ setActiveTab, leads, loading, activity = [], globalTraff
 function LeadsTab({ leads, refreshData }) {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
-
   const handleDelete = async (id) => {
     await deleteLead(id);
     await refreshData();
@@ -292,7 +331,8 @@ function LeadsTab({ leads, refreshData }) {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 14px' }}>
+          <button onClick={() => exportCSV(leads, 'leads_export.csv')} style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)', cursor: 'pointer', fontSize: '0.85rem' }}>Export CSV</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 14px' }}>
             <Eye size={14} color="rgba(255,255,255,0.4)" />
             <input
               value={search}
@@ -483,6 +523,78 @@ function LeadsTab({ leads, refreshData }) {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── Customers Tab ────────────────────────────────────
+function CustomersTab({ customers, refreshData }) {
+  const [search, setSearch] = useState('');
+  
+  const handleDelete = async (id) => {
+    if(window.confirm('Delete this customer record?')) {
+      const { deleteCustomer } = await import('../utils/services');
+      await deleteCustomer(id);
+      await refreshData();
+    }
+  };
+
+  const filtered = customers.filter(c =>
+    c.name?.toLowerCase().includes(search.toLowerCase()) ||
+    c.email?.toLowerCase().includes(search.toLowerCase()) ||
+    c.phone?.includes(search)
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', margin: 0 }}>Customers (Chatbot)</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>
+            {customers.length} total customers captured via Chat.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => exportCSV(customers, 'customers_export.csv')} style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)', cursor: 'pointer', fontSize: '0.85rem' }}>Export CSV</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 14px' }}>
+            <Eye size={14} color="rgba(255,255,255,0.4)" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search customers…"
+              style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: '0.85rem', width: 160 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {filtered.length === 0 ? (
+          <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '40px 20px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)' }}>
+            <User size={32} color="rgba(255,255,255,0.2)" />
+            <p style={{ color: 'rgba(255,255,255,0.3)', margin: '12px 0 0', fontSize: '0.9rem' }}>No customers found.</p>
+          </div>
+        ) : filtered.map(c => (
+          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, #a78bfa, #c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+              {c.name?.[0]?.toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ color: '#fff', fontWeight: 600, margin: 0, fontSize: '0.9rem' }}>{c.name}</p>
+              <p style={{ color: 'rgba(255,255,255,0.45)', margin: 0, fontSize: '0.78rem' }}>{c.email} {c.phone ? '| '+c.phone : ''}</p>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <p style={{ color: 'rgba(255,255,255,0.3)', margin: 0, fontSize: '0.7rem' }}>
+                {new Date(c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}
+              </p>
+              <button onClick={() => handleDelete(c.id)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', cursor: 'pointer', color: '#ef4444', borderRadius: 8, padding: 8, display: 'flex' }}>
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1022,8 +1134,10 @@ function AdminCatalogTab({ items, addFn, updateFn, deleteFn, refreshData, title,
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', icon: iconProp, category: '', span: '', images: [] });
   const [isCompressing, setIsCompressing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
+    setIsSaving(true);
     if (!form.title) return;
     if (editing) { await updateFn(editing, form); }
     else { await addFn(form); }
@@ -1047,19 +1161,29 @@ function AdminCatalogTab({ items, addFn, updateFn, deleteFn, refreshData, title,
     window.dispatchEvent(new Event(`${title.toLowerCase().replace(' ', '-')}-updated`));
   };
 
-  const handleImageUpload = async (e) => {
+  const handleMediaUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    if (form.images.length + files.length > 10) { alert('Maximum 10 images allowed.'); return; }
+    if (form.images.length + files.length > 10) { alert('Maximum 10 media items allowed.'); return; }
     setIsCompressing(true);
     try {
       const newImages = [];
       for (let file of files) { 
-        newImages.push(await imageToCompressedBase64(file)); 
-        trackEvent('image_uploaded', { name: file.name, size: file.size, type: file.type });
+        if (file.type.startsWith('video/')) {
+          try {
+            const url = await uploadMediaToStorage(file);
+            newImages.push(url);
+            trackEvent('video_uploaded', { name: file.name, size: file.size });
+          } catch (uploadError) {
+            alert(`Failed to upload video ${file.name}. Ensure Firebase Storage is configured.`);
+          }
+        } else {
+          newImages.push(await imageToCompressedBase64(file)); 
+          trackEvent('image_uploaded', { name: file.name, size: file.size, type: file.type });
+        }
       }
       setForm(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
-    } catch { alert('Failed to compress image.'); }
+    } catch { alert('Failed to process media.'); }
     finally { setIsCompressing(false); e.target.value = null; }
   };
 
@@ -1143,21 +1267,21 @@ function AdminCatalogTab({ items, addFn, updateFn, deleteFn, refreshData, title,
                   ))}
                   {form.images.length < 10 && (
                     <div>
-                      <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={isCompressing} style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }} />
-                      {isCompressing && <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: 4, display: 'block' }}>Compressing…</span>}
+                      <input type="file" accept="image/*,video/*" multiple onChange={handleMediaUpload} disabled={isCompressing} style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }} />
+                      <div style={{ fontSize: '0.75rem', color: 'var(--accent-gold)', marginTop: 8, opacity: 0.8 }}>💡 Recommended: Images 1920x1080px (16:9) | Videos &lt; 50MB (MP4)</div>{isCompressing && <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: 4, display: 'block' }}>Processing media...</span>}
                     </div>
                   )}
                 </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-              <button onClick={handleSave} disabled={isCompressing} style={{
+              <button onClick={handleSave} disabled={isCompressing || isSaving} style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '10px 20px', borderRadius: 10,
                 background: 'linear-gradient(135deg, #d4af37, #ffd700)',
                 color: '#000', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', border: 'none',
               }}>
-                <Save size={15} /> {editing ? 'Update' : 'Save'} {unitName}
+                <Save size={15} /> {isSaving ? 'Saving...' : editing ? 'Update ' + unitName : 'Save ' + unitName}
               </button>
               <button onClick={() => { setShowForm(false); setEditing(null); }} style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -1214,14 +1338,350 @@ function AdminCatalogTab({ items, addFn, updateFn, deleteFn, refreshData, title,
   );
 }
 
+// ─── Hero Banner Tab ──────────────────────────────
+function HeroTab({ images, refreshData }) {
+  const [loading, setLoading] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [updatingType, setUpdatingType] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const triggerUpload = (id, type) => {
+    setUpdatingId(id);
+    setUpdatingType(type);
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    try {
+      let uploadedUrl = "";
+      if (file.type.startsWith('video/')) {
+        const { uploadMediaToStorage } = await import('../utils/services');
+        uploadedUrl = await uploadMediaToStorage(file);
+      } else {
+        const { imageToCompressedBase64 } = await import('../utils/services');
+        // compress less aggressively for desktop, more for mobile
+        uploadedUrl = await imageToCompressedBase64(file, updatingType === 'mobileUrl' ? 1080 : 1920, 0.8);
+      }
+      
+      const { updateHeroImage, addHeroImage } = await import('../utils/services');
+      
+      if (updatingId === 'NEW') {
+        // By default, creating a new slide sets its desktop URL first
+        await addHeroImage({ [updatingType]: uploadedUrl, order: images.length });
+      } else {
+        await updateHeroImage(updatingId, { [updatingType]: uploadedUrl });
+      }
+      await refreshData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload media. Ensure Firebase is configured correctly.');
+    }
+    setLoading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Delete this hero image?')) {
+      const { deleteHeroImage } = await import('../utils/services');
+      await deleteHeroImage(id);
+      await refreshData();
+    }
+  };
+
+  const handleMoveUp = async (idx) => {
+    if (idx === 0) return;
+    setLoading(true);
+    const { updateHeroImage } = await import('../utils/services');
+    await updateHeroImage(images[idx].id, { order: idx - 1 });
+    await updateHeroImage(images[idx-1].id, { order: idx });
+    await refreshData();
+    setLoading(false);
+  };
+
+  const handleMoveDown = async (idx) => {
+    if (idx === images.length - 1) return;
+    setLoading(true);
+    const { updateHeroImage } = await import('../utils/services');
+    await updateHeroImage(images[idx].id, { order: idx + 1 });
+    await updateHeroImage(images[idx+1].id, { order: idx });
+    await refreshData();
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', margin: 0 }}>Hero Backgrounds</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>Manage background slider images for Desktop & Mobile.</p>
+        </div>
+        <button
+          onClick={() => triggerUpload('NEW', 'url')}
+          disabled={loading}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 20px', borderRadius: 8,
+            background: 'linear-gradient(135deg, #d4af37, #ffd700)',
+            color: '#000', fontWeight: 600, fontSize: '0.9rem', border: 'none', cursor: 'pointer'
+          }}
+        >
+          {loading ? 'Uploading...' : 'Add New Slide (Desktop)'}
+        </button>
+        <input type="file" accept="image/*,video/*" ref={fileInputRef} onChange={handleUpload} style={{ display: 'none' }} />
+      </div>
+      <div style={{ fontSize: '0.8rem', color: 'var(--accent-gold)', marginBottom: 10, opacity: 0.8 }}>
+        💡 Desktop: 1920x1080px (16:9) | Mobile: 1080x1920px (9:16)
+      </div>
+
+      
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 20 }}>
+        
+
+        {images.map((img, index) => (
+          <div key={img.id} className="glass-card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <h4 style={{ color: '#d4af37', margin: 0, fontWeight: 'bold' }}>Slide #{index + 1}</h4>
+               <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => handleMoveUp(index)} disabled={index === 0} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '4px 10px', borderRadius: 6, cursor: index === 0 ? 'not-allowed' : 'pointer' }}>&larr;</button>
+                  <button onClick={() => handleMoveDown(index)} disabled={index === images.length - 1} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '4px 10px', borderRadius: 6, cursor: index === images.length - 1 ? 'not-allowed' : 'pointer' }}>&rarr;</button>
+                  <button onClick={() => handleDelete(img.id)} style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', padding: '4px 8px', borderRadius: 6, cursor: 'pointer' }}>Delete</button>
+               </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 16 }}>
+               {/* Desktop Preview */}
+               <div style={{ flex: 1 }}>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', marginBottom: 8 }}>Desktop (16:9)</p>
+                  <div style={{ width: '100%', aspectRatio: '16/9', background: 'rgba(0,0,0,0.5)', borderRadius: 8, overflow: 'hidden', marginBottom: 8 }}>
+                     {img.url ? (
+                       img.url.includes('.mp4') || img.url.includes('video') ? <video src={img.url} style={{width:'100%', height:'100%', objectFit:'cover'}} muted /> : <img src={img.url} style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                     ) : (
+                       <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%', color:'rgba(255,255,255,0.2)', fontSize: '0.8rem'}}>No Image</div>
+                     )}
+                  </div>
+                  <button onClick={() => triggerUpload(img.id, 'url')} disabled={loading} style={{width: '100%', padding: '6px', fontSize: '0.8rem', borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer'}}>Update Desktop</button>
+               </div>
+
+               {/* Mobile Preview */}
+               <div style={{ width: 120 }}>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', marginBottom: 8 }}>Mobile (9:16)</p>
+                  <div style={{ width: '100%', aspectRatio: '9/16', background: 'rgba(0,0,0,0.5)', borderRadius: 8, overflow: 'hidden', marginBottom: 8 }}>
+                     {img.mobileUrl ? (
+                       img.mobileUrl.includes('.mp4') || img.mobileUrl.includes('video') ? <video src={img.mobileUrl} style={{width:'100%', height:'100%', objectFit:'cover'}} muted /> : <img src={img.mobileUrl} style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                     ) : (
+                       <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%', color:'rgba(255,255,255,0.2)', textAlign:'center', fontSize: '0.8rem'}}>No Image</div>
+                     )}
+                  </div>
+                  <button onClick={() => triggerUpload(img.id, 'mobileUrl')} disabled={loading} style={{width: '100%', padding: '6px', fontSize: '0.8rem', borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer'}}>Update Mobile</button>
+               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Admin Shell ──────────────────────────────────
+// Instagram Reels Tab
+function ReelsTab({ reels, refreshData }) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ title: '', id: '' });
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!formData.title || !formData.id) return;
+    setLoading(true);
+    try {
+      await addReel(formData);
+      setFormData({ title: '', id: '' });
+      await refreshData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add reel');
+    }
+    setLoading(false);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this reel?')) return;
+    setLoading(true);
+    await deleteReel(id);
+    await refreshData();
+    setLoading(false);
+  };
+
+  return (
+    <div className="animate-in">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Instagram Reels</h2>
+      </div>
+
+      <div className="glass-card" style={{ padding: 24, marginBottom: 24 }}>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: 16 }}>Add New Reel</h3>
+        <form onSubmit={handleAdd} style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Reel Title"
+            value={formData.title}
+            onChange={e => setFormData({ ...formData, title: e.target.value })}
+            className="glass-input"
+            style={{ flex: 1, minWidth: 200 }}
+            required
+          />
+          <input
+            type="text"
+            placeholder="Instagram Reel ID (e.g., C3wkd8MrDa2)"
+            value={formData.id}
+            onChange={e => {
+              let val = e.target.value;
+              if (val.includes('instagram.com/reel/')) {
+                val = val.split('reel/')[1].split('/')[0];
+              } else if (val.includes('instagram.com/p/')) {
+                val = val.split('p/')[1].split('/')[0];
+              }
+              setFormData({ ...formData, id: val });
+            }}
+            className="glass-input"
+            style={{ flex: 1, minWidth: 200 }}
+            required
+          />
+          <button type="submit" className="btn-squishy" disabled={loading} style={{ background: '#d4af37', color: '#000', padding: '12px 24px', fontWeight: 600, border: 'none', borderRadius: 12 }}>
+            {loading ? 'Adding...' : 'Add Reel'}
+          </button>
+        </form>
+        <p style={{ marginTop: 12, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>💡 Tip: You can paste the full Instagram link or just the ID.</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+        {reels.map(reel => (
+          <div key={reel.id} className="glass-card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <h4 style={{ fontWeight: 600, fontSize: '1.1rem', color: '#d4af37' }}>{reel.title}</h4>
+              <button onClick={() => handleDelete(reel.id)} style={{ background: 'rgba(255,50,50,0.1)', color: '#ff4444', border: 'none', padding: 8, borderRadius: 8, cursor: 'pointer' }}>
+                <Trash2 size={16} />
+              </button>
+            </div>
+            <div style={{ width: '100%', height: 400, background: '#000', borderRadius: 12, overflow: 'hidden' }}>
+              <iframe
+                src={"https://www.instagram.com/reel/" + reel.id + "/embed"}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                scrolling="no"
+              />
+            </div>
+          </div>
+        ))}
+        {reels.length === 0 && <p style={{ color: 'rgba(255,255,255,0.5)' }}>No reels added yet.</p>}
+      </div>
+    </div>
+  );
+}
+
+// Admin Shell
+
+
+
+// Journey Carousel Tab
+function JourneyTab({ images, refreshData }) {
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    try {
+      let uploadedUrl = "";
+      if (file.type.startsWith('video/')) {
+        const { uploadMediaToStorage } = await import('../utils/services');
+        uploadedUrl = await uploadMediaToStorage(file);
+      } else {
+        const { imageToCompressedBase64 } = await import('../utils/services');
+        uploadedUrl = await imageToCompressedBase64(file, 800, 0.8);
+      }
+      
+      const { addJourneyImage } = await import('../utils/services');
+      await addJourneyImage({ url: uploadedUrl, order: images?.length || 0 });
+      await refreshData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload media. Ensure Firebase is configured correctly.');
+    }
+    setLoading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Delete this image?')) {
+      const { deleteJourneyImage } = await import('../utils/services');
+      await deleteJourneyImage(id);
+      await refreshData();
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', margin: 0 }}>Hero Banner Images</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: 0 }}>Manage moving carousel images below hero section.</p>
+        </div>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          style={{ background: 'var(--accent-gold)', color: '#000', border: 'none', padding: '10px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}
+          disabled={loading}
+        >
+          {loading ? 'Uploading...' : 'Add Image / Video'}
+        </button>
+      </div>
+
+      <input type="file" ref={fileInputRef} onChange={handleUpload} accept="image/*,video/*" style={{ display: 'none' }} />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px', marginTop: 10 }}>
+        {(images || []).map((img) => {
+          const isVideo = typeof img.url === 'string' && (img.url.match(/\.(mp4|webm|mov)$/i) || img.url.includes('video%2F'));
+          return (
+            <div key={img.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
+              <div style={{ aspectRatio: '3/2', background: '#000' }}>
+                {isVideo ? (
+                  <video src={img.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} autoPlay loop muted playsInline />
+                ) : (
+                  <img src={img.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Carousel" />
+                )}
+              </div>
+              <button 
+                onClick={() => handleDelete(img.id)}
+                style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.6)', border: 'none', color: '#ff4444', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                Delete
+              </button>
+            </div>
+          );
+        })}
+        {(!images || images.length === 0) && (
+          <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', gridColumn: '1 / -1', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 12 }}>
+            No images in carousel. Click "Add Image / Video" to add one.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [leads, setLeads] = useState([]);
   const [services, setServices] = useState([]);
   const [activities, setActivities] = useState([]);
   const [artists, setArtists] = useState([]);
+  const [heroImages, setHeroImages] = useState([]);
+  const [journeyImages, setJourneyImages] = useState([]);
   const [timeline, setTimeline] = useState([]);
+  const [reels, setReels] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [activity, setActivity] = useState([]);
   const [globalTraffic, setGlobalTraffic] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1234,58 +1694,56 @@ export default function Admin() {
       const fetchServices = async () => { try { return await getServices(); } catch(e) { console.error('Services fail', e); return []; } };
       const fetchActivities = async () => { try { return await getActivities(); } catch(e) { console.error('Activities fail', e); return []; } };
       const fetchArtists = async () => { try { return await getArtists(); } catch(e) { console.error('Artists fail', e); return []; } };
+      const fetchHeroImages = async () => { try { return await getHeroImages(); } catch(e) { console.error('HeroImages fail', e); return []; } };
+      const fetchJourneyImages = async () => { try { return await getJourneyImages(); } catch(e) { console.error('JourneyImages fail', e); return []; } };
+      const fetchReels = async () => { try { return await getReels(); } catch(e) { console.error('Reels fail', e); return []; } };
       const fetchTimeline = async () => { try { return await getTimelineEvents(); } catch(e) { console.error('Timeline fail', e); return []; } };
       const fetchActivity = async () => { try { return await getActivityLog(); } catch(e) { console.error('Activity fail', e); return []; } };
-      const fetchTraffic = async () => { try { return await getGlobalTrafficData(); } catch(e) { console.error('Traffic fail', e); return null; } };
-
-      const [l, s, act, art, tl, a, t] = await Promise.all([
+      const fetchCustomers = async () => { try { return await getCustomers(); } catch(e) { console.error('Customers fail', e); return []; } };
+      
+      const [l, s, act, art, hi, ji, rls, tl, a, c] = await Promise.all([
         fetchLeads(),
         fetchServices(),
         fetchActivities(),
         fetchArtists(),
+        fetchHeroImages(),
+        fetchJourneyImages(),
+        fetchReels(),
         fetchTimeline(),
         fetchActivity(),
-        fetchTraffic(),
+        fetchCustomers()
       ]);
       setLeads(l);
+      setCustomers(c);
       setServices(s);
       setActivities(act);
       setArtists(art);
+      setHeroImages(hi);
+      setJourneyImages(ji);
+      setReels(rls);
       setTimeline(tl);
       setActivity(a);
-      setGlobalTraffic(t);
-    } catch (e) {
-      console.error('Data fetch failed', e);
-    } finally {
+      setGlobalTraffic({ today: 0, thisWeek: 0, total: 0 }); // Fallback
+    } catch (error) {
+      console.error('Failed to fetch admin data', error);
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (localStorage.getItem('atithi_admin') !== 'true') {
-      navigate('/admin/login');
-      return;
-    }
-    refreshData();
-    
-    // Periodically refresh data every 10 seconds
-    const interval = setInterval(refreshData, 10000);
-    return () => clearInterval(interval);
-  }, [navigate]);
+    refreshData().then(() => setLoading(false));
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('atithi_admin');
-    navigate('/admin/login');
-  };
-
-  const renderActiveTab = () => {
-    switch (activeTab) {
-      case 'dashboard': return <DashboardTab setActiveTab={setActiveTab} leads={leads} loading={loading} activity={activity} globalTraffic={globalTraffic} />;
+  const renderTab = () => {
+    switch(activeTab) {
+      case 'dashboard': return <DashboardTab leads={leads} customers={customers} globalTraffic={globalTraffic} />;
       case 'leads':     return <LeadsTab leads={leads} refreshData={refreshData} />;
-      case 'traffic':   return <TrafficTab globalTraffic={globalTraffic} />;
-      case 'security':  return <SecurityTab leads={leads} />;
+      case 'customers': return <CustomersTab customers={customers} refreshData={refreshData} />;
       case 'activity':  return <ActivityTab log={activity} refreshData={refreshData} />;
       case 'timeline':  return <TimelineTab events={timeline} refreshData={refreshData} />;
+      case 'hero':      return <HeroTab images={heroImages} refreshData={refreshData} />;
+        case 'carousel':  return <JourneyTab images={journeyImages} refreshData={refreshData} />;
+      case 'reels':     return <ReelsTab reels={reels} refreshData={refreshData} />;
       case 'services':  return <AdminCatalogTab items={services} addFn={addService} updateFn={updateService} deleteFn={deleteService} refreshData={refreshData} title="Services" unitName="Service" iconProp="icon" />;
       case 'activities': return <AdminCatalogTab items={activities} addFn={addActivity} updateFn={updateActivity} deleteFn={deleteActivity} refreshData={refreshData} title="Activities" unitName="Activity" iconProp="star" />;
       case 'artists':   return <AdminCatalogTab items={artists} addFn={addArtist} updateFn={updateArtist} deleteFn={deleteArtist} refreshData={refreshData} title="Artists" unitName="Artist" iconProp="star" />;
@@ -1377,3 +1835,4 @@ export default function Admin() {
     </div>
   );
 }
+

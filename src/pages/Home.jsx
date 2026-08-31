@@ -15,7 +15,7 @@ function DiscoverSection() {
   ];
 
   return (
-    <section className="section-container" style={{ padding: '4rem 24px' }}>
+    <section className="section-container" style={{ padding: 'clamp(40px, 8vw, 80px) 24px' }}>
       <div className="text-center mb-12">
         <h2 className="section-title">Discover the Magic</h2>
         <p className="section-subtitle">Delve deeper into how we craft your perfect day.</p>
@@ -49,22 +49,118 @@ export default function Home() {
     <>
       <Hero />
       <JourneyCarousel />
-      <section id="timeline" style={{ position: 'relative', zIndex: 10 }}>
+      <section id="timeline" style={{ position: 'relative', zIndex: 10, padding: 'clamp(40px, 8vw, 80px) 24px' }}>
         <Link to="/timeline" style={{ textDecoration: 'none' }}>
           <motion.div 
-            whileHover={{ scale: 1.01 }}
-            className="glass" 
+            whileHover={{ scale: 1.01, boxShadow: '0 20px 40px rgba(0,0,0,0.6)' }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
             style={{ 
-              margin: '1rem 24px', 
-              padding: '2.5rem', 
+              position: 'relative',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              minHeight: '380px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               textAlign: 'center',
-              border: '1px solid var(--accent-gold)',
               cursor: 'pointer',
-              opacity: 1
+              border: '1px solid rgba(212,175,55,0.2)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
+              background: 'var(--bg-primary)'
+            }}
+            onMouseOver={(e) => {
+              const bg = e.currentTarget.querySelector('.journey-bg');
+              if(bg) bg.style.transform = 'scale(1.05)';
+            }}
+            onMouseOut={(e) => {
+              const bg = e.currentTarget.querySelector('.journey-bg');
+              if(bg) bg.style.transform = 'scale(1)';
             }}
           >
-            <h2 className="section-title" style={{ fontSize: '2.2rem', marginBottom: '0.8rem' }}>Our Journey</h2>
-            <p className="section-subtitle" style={{ marginBottom: 0, fontSize: '0.95rem' }}>Step-by-step chronology of your celebration →</p>
+            {/* Cinematic Background Image */}
+            <div 
+              className="journey-bg"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: 'url(https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.4,
+                transition: 'transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
+              }} 
+            />
+
+            {/* Gradient Overlay for Depth & Text Readability */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to right, rgba(6,5,10,0.95) 0%, rgba(6,5,10,0.3) 50%, rgba(6,5,10,0.95) 100%)',
+            }} />
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to top, rgba(6,5,10,0.9) 0%, transparent 50%, rgba(6,5,10,0.4) 100%)',
+            }} />
+
+            {/* Rich Typography Content */}
+            <div style={{ position: 'relative', zIndex: 2, padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+              <span style={{ 
+                color: 'var(--accent-gold)', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.25em', 
+                fontSize: '0.85rem', 
+                fontWeight: 600, 
+                display: 'block', 
+                marginBottom: '16px' 
+              }}>
+                Explore The Itinerary
+              </span>
+              
+              <h2 style={{ 
+                fontFamily: "'Cormorant Garamond', serif", 
+                fontSize: 'clamp(3rem, 6vw, 4.5rem)', 
+                color: '#fff', 
+                marginBottom: '1rem', 
+                lineHeight: 1.1, 
+                textShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                fontStyle: 'italic'
+              }}>
+                Our Journey
+              </h2>
+              
+              <div style={{ width: '80px', height: '2px', background: 'var(--accent-gold)', margin: '0 auto 1.5rem auto', opacity: 0.7 }} />
+              
+              <p style={{ 
+                color: 'rgba(255,255,255,0.85)', 
+                fontSize: '1.1rem', 
+                margin: '0 auto', 
+                lineHeight: 1.6 
+              }}>
+                Discover the step-by-step chronology of your celebration. A meticulously crafted timeline ensuring every unforgettable moment unfolds perfectly.
+              </p>
+              
+              <div style={{ 
+                marginTop: '2.5rem', 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                color: 'var(--accent-gold)', 
+                fontSize: '0.95rem', 
+                fontWeight: 600, 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.15em',
+                border: '1px solid var(--accent-gold)',
+                padding: '12px 32px',
+                borderRadius: '100px',
+                background: 'rgba(212,175,55,0.05)'
+              }}>
+                View Full Timeline 
+                <motion.span animate={{ x: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}>
+                  →
+                </motion.span>
+              </div>
+            </div>
           </motion.div>
         </Link>
       </section>

@@ -1,15 +1,17 @@
-import { motion } from 'framer-motion';
 
-const images = [
-  'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1543329729-eb741005ca65?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=600&auto=format&fit=crop'
-];
+import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { getJourneyImages } from '../utils/services';
 
 export default function JourneyCarousel() {
+  const [images, setImages] = useState([]);
+
+  useEffect(() => {
+    getJourneyImages().then(res => setImages(res.map(i => i.url)));
+  }, []);
+
+  if (images.length === 0) return null;
+
   const duplicatedImages = [...images, ...images]; // To allow seamless loop
 
   return (
@@ -31,28 +33,37 @@ export default function JourneyCarousel() {
           x: {
             repeat: Infinity,
             repeatType: 'loop',
-            duration: 30, // adjust speed
+            duration: images.length * 5, // dynamic speed based on length
             ease: 'linear',
           },
         }}
       >
-        {duplicatedImages.map((src, index) => (
-          <div key={index} style={{ paddingRight: '1.5rem' }}>
-            <div
-              style={{
-                width: '280px',
-                height: '200px',
-                backgroundImage: `url(${src})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                borderRadius: '12px',
-                border: '1px solid rgba(212, 175, 55, 0.4)',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
-                flexShrink: 0
-              }}
-            />
-          </div>
-        ))}
+        {duplicatedImages.map((src, index) => {
+          const isVideo = typeof src === 'string' && (src.match(/\.(mp4|webm|mov)$/i) || src.includes('video%2F'));
+          
+          return (
+            <div key={index} style={{ paddingRight: '1.5rem' }}>
+              <div
+                style={{
+                  width: '280px',
+                  height: '200px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(212, 175, 55, 0.4)',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
+                  flexShrink: 0,
+                  overflow: 'hidden',
+                  background: 'var(--bg-card)'
+                }}
+              >
+                {isVideo ? (
+                  <video src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} autoPlay loop muted playsInline />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                )}
+              </div>
+            </div>
+          );
+        })}
       </motion.div>
     </div>
   );

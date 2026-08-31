@@ -11,10 +11,10 @@ export default function Footer() {
   return (
     <footer style={{
       textAlign: 'center',
-      padding: '60px 24px',
+      padding: 'clamp(40px, 6vw, 60px) 24px',
       borderTop: '1px solid var(--accent-gold)',
       background: 'rgba(5, 5, 5, 0.95)',
-      marginTop: 80,
+      marginTop: 'clamp(40px, 8vw, 80px)',
       position: 'relative',
       zIndex: 50,
       width: '100%'

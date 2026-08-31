@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTimeOfDay } from './hooks/useTimeOfDay';
 import { useTraffic } from './hooks/useTraffic';
 import { useClickTracking } from './hooks/useClickTracking';
@@ -20,15 +20,17 @@ import AdminLogin from './pages/AdminLogin';
 import Admin from './pages/Admin';
 import GoldenDustBackground from './components/GoldenDustBackground';
 
+import ScrollToTop from './components/ScrollToTop';
 import WhyPlanner from './pages/WhyPlanner';
 import Photography from './pages/Photography';
 import WhySocialMedia from './pages/WhySocialMedia';
 import EventClasses from './pages/EventClasses';
-import CateringPRO from './pages/CateringPRO';
+import Catering from './pages/Catering';
 import AboutContact from './pages/AboutContact';
 import NotFound from './pages/NotFound';
 import ActivityZone from './pages/ActivityZone';
 import ArtistSection from './pages/ArtistSection';
+import Reels from './pages/Reels';
 import ErrorBoundary from './components/ErrorBoundary';
 import BackgroundMusic from './components/BackgroundMusic';
 
@@ -62,7 +64,8 @@ function AppRoutes() {
         <Route path="/shaadi-bts" element={<WhySocialMedia />} />
         <Route path="/classes" element={<EventClasses />} />
         <Route path="/academy" element={<EventClasses />} />
-        <Route path="/catering-pro" element={<CateringPRO />} />
+        <Route path="/catering" element={<Catering />} />
+        <Route path="/reels" element={<Reels />} />
         <Route path="/activity-zone" element={<ActivityZone />} />
         <Route path="/artists" element={<ArtistSection />} />
         <Route path="/contact" element={<AboutContact />} />
@@ -108,7 +111,15 @@ function App() {
       <CartProvider>
         <Router>
           {!loaded && <Loader onComplete={handleLoaderComplete} />}
-          <AppRoutes />
+          {loaded && (
+            <motion.div
+              initial={{ opacity: 0, y: 80, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <AppRoutes />
+            </motion.div>
+          )}
         </Router>
       </CartProvider>
     </ErrorBoundary>

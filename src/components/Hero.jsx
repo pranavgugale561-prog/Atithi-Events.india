@@ -1,61 +1,65 @@
-import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef, useState, useEffect } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useScrollSpeed } from '../hooks/useScrollSpeed';
 import { ArrowDown, Heart } from 'lucide-react';
+import { getHeroImages } from '../utils/services';
 
-// SVG Floral elements
-const FloralPetal = ({ style, delay = 0 }) => (
-  <motion.svg
-    viewBox="0 0 80 120"
-    style={{ position: 'absolute', width: 'clamp(40px, 8vw, 80px)', ...style }}
+// Premium Bokeh and Sparkle elements
+const GoldenOrb = ({ style, delay = 0, size = 100 }) => (
+  <motion.div
+    style={{
+      position: 'absolute',
+      width: size,
+      height: size,
+      borderRadius: '50%',
+      background: 'radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0) 70%)',
+      filter: 'blur(8px)',
+      ...style
+    }}
     initial={{ opacity: 0, scale: 0.5 }}
-    whileInView={{ opacity: 0.6, scale: 1 }}
-    transition={{ duration: 1.2, delay, ease: 'easeOut' }}
-  >
-    <ellipse cx="40" cy="60" rx="25" ry="50" fill="var(--accent-rose)" opacity="0.5" />
-    <ellipse cx="40" cy="60" rx="15" ry="35" fill="var(--accent-coral)" opacity="0.3" />
-    <circle cx="40" cy="60" r="6" fill="var(--accent-gold)" opacity="0.6" />
-  </motion.svg>
+    whileInView={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.3, 1] }}
+    transition={{ duration: 5, delay, repeat: Infinity, ease: 'easeInOut' }}
+  />
 );
 
-const FloralLeaf = ({ style, delay = 0 }) => (
+const StarSparkle = ({ style, delay = 0, size = 24 }) => (
   <motion.svg
-    viewBox="0 0 60 100"
-    style={{ position: 'absolute', width: 'clamp(30px, 6vw, 60px)', ...style }}
-    initial={{ opacity: 0, rotate: -30 }}
-    whileInView={{ opacity: 0.5, rotate: 0 }}
-    transition={{ duration: 1.5, delay, ease: 'easeOut' }}
+    viewBox="0 0 24 24"
+    style={{ position: 'absolute', width: size, filter: 'drop-shadow(0px 0px 4px rgba(212,175,55,0.8))', ...style }}
+    initial={{ opacity: 0, scale: 0, rotate: 0 }}
+    whileInView={{ opacity: [0, 0.8, 0], scale: [0.5, 1, 0.5], rotate: [0, 90, 180] }}
+    transition={{ duration: 3.5, delay, repeat: Infinity, ease: 'easeInOut' }}
   >
-    <path
-      d="M30 5 C10 30 5 70 30 95 C55 70 50 30 30 5Z"
-      fill="var(--accent-gold)"
-      opacity="0.35"
-    />
-    <path
-      d="M30 15 L30 85"
-      stroke="var(--accent-gold)"
-      strokeWidth="1"
-      opacity="0.4"
-      fill="none"
-    />
-  </motion.svg>
-);
-
-const FloralRing = ({ style, delay = 0 }) => (
-  <motion.svg
-    viewBox="0 0 80 80"
-    style={{ position: 'absolute', width: 'clamp(35px, 6vw, 65px)', ...style }}
-    initial={{ opacity: 0, scale: 0 }}
-    whileInView={{ opacity: 0.4, scale: 1 }}
-    transition={{ duration: 1, delay, type: 'spring', stiffness: 100 }}
-  >
-    <circle cx="40" cy="40" r="30" stroke="var(--accent-gold)" strokeWidth="3" fill="none" opacity="0.5" />
-    <circle cx="40" cy="10" r="6" fill="var(--accent-coral)" opacity="0.5" />
+    <path d="M12 0L13.5 10.5L24 12L13.5 13.5L12 24L10.5 13.5L0 12L10.5 10.5Z" fill="var(--accent-gold)" opacity="0.9" />
   </motion.svg>
 );
 
 export default function Hero() {
   const containerRef = useRef(null);
+  const [images, setImages] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+
+  useEffect(() => {
+    getHeroImages().then(res => setImages(res));
+  }, []);
+
+  useEffect(() => {
+    if (images.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex(prev => (prev + 1) % images.length);
+      }, 5000); // 5 seconds per image
+      return () => clearInterval(interval);
+    }
+  }, [images.length]);
+
   const scrollSpeed = useScrollSpeed();
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -65,6 +69,7 @@ export default function Hero() {
   const y1 = useTransform(scrollYProgress, [0, 1], [0, -120]);
   const y2 = useTransform(scrollYProgress, [0, 1], [0, -80]);
   const y3 = useTransform(scrollYProgress, [0, 1], [0, -200]);
+  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, 150]);
   const rotate1 = useTransform(scrollYProgress, [0, 1], [0, 45]);
   const rotate2 = useTransform(scrollYProgress, [0, 1], [0, -30]);
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.9]);
@@ -87,40 +92,66 @@ export default function Hero() {
         zIndex: 1,
       }}
     >
-      {/* Floating Florals — Left Side */}
+      {/* Background Hero Banner Slider */}
+      <AnimatePresence>
+        {images.length > 0 && (
+          <motion.div
+            key={currentIndex}
+            initial={{ scale: 1.1, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.3 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: '-20%',
+              zIndex: 0,
+              y: parallaxY,
+              backgroundImage: `url("${isMobile && images[currentIndex]?.mobileUrl ? images[currentIndex]?.mobileUrl : images[currentIndex]?.url}")`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 90%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 90%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+      {/* Floating Elements — Left Side */}
       <motion.div style={{ y: y1, rotate: rotate1 }}>
-        <FloralPetal style={{ top: '15%', left: '5%' }} delay={0.2} />
+        <GoldenOrb style={{ top: '15%', left: '5%' }} size={120} delay={0.2} />
       </motion.div>
       <motion.div style={{ y: y2, rotate: rotate2 }}>
-        <FloralLeaf style={{ top: '35%', left: '8%' }} delay={0.4} />
+        <StarSparkle style={{ top: '35%', left: '8%' }} size={32} delay={0.4} />
       </motion.div>
       <motion.div style={{ y: y3 }}>
-        <FloralPetal style={{ top: '60%', left: '3%' }} delay={0.6} />
+        <GoldenOrb style={{ top: '60%', left: '3%' }} size={80} delay={0.6} />
       </motion.div>
       <motion.div style={{ y: y1 }}>
-        <FloralRing style={{ top: '25%', left: '12%' }} delay={0.3} />
+        <StarSparkle style={{ top: '25%', left: '12%' }} size={40} delay={0.3} />
       </motion.div>
 
-      {/* Floating Florals — Right Side */}
+      {/* Floating Elements — Right Side */}
       <motion.div style={{ y: y2, rotate: rotate1 }}>
-        <FloralPetal style={{ top: '12%', right: '6%' }} delay={0.3} />
+        <GoldenOrb style={{ top: '12%', right: '6%' }} size={140} delay={0.3} />
       </motion.div>
       <motion.div style={{ y: y1, rotate: rotate2 }}>
-        <FloralLeaf style={{ top: '45%', right: '4%' }} delay={0.5} />
+        <StarSparkle style={{ top: '45%', right: '4%' }} size={24} delay={0.5} />
       </motion.div>
       <motion.div style={{ y: y3 }}>
-        <FloralRing style={{ top: '55%', right: '10%' }} delay={0.4} />
+        <GoldenOrb style={{ top: '55%', right: '10%' }} size={100} delay={0.4} />
       </motion.div>
       <motion.div style={{ y: y2 }}>
-        <FloralPetal style={{ top: '70%', right: '7%' }} delay={0.7} />
+        <StarSparkle style={{ top: '70%', right: '7%' }} size={36} delay={0.7} />
       </motion.div>
 
       {/* Top corners */}
       <motion.div style={{ y: y1 }}>
-        <FloralLeaf style={{ top: '5%', left: '20%' }} delay={0.1} />
+        <GoldenOrb style={{ top: '5%', left: '20%' }} size={160} delay={0.1} />
       </motion.div>
       <motion.div style={{ y: y2 }}>
-        <FloralLeaf style={{ top: '8%', right: '18%' }} delay={0.2} />
+        <StarSparkle style={{ top: '8%', right: '18%' }} size={28} delay={0.2} />
       </motion.div>
 
       {/* Center Content */}
