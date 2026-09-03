@@ -3,308 +3,327 @@ import { Download, Plus, Trash2, FileText } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
+const FIRM = {
+  name: 'ATITHI EVENTS',
+  tagline: 'Making Your Moments Magical',
+  address: 'Mumbai, Maharashtra, India',
+  phone: '+91 80805 31468',
+  email: 'atithieventsservice@gmail.com',
+  website: 'atithi-events-india-p2e8.vercel.app',
+  logo: '/logo.png',
+};
+
 export default function QuotationBuilder() {
-  const [clientName, setClientName] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
+  const [clientName, setClientName]   = useState('');
   const [clientPhone, setClientPhone] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  const [eventType, setEventType] = useState('');
-  const [venue, setVenue] = useState('');
-  
+  const [eventDate, setEventDate]     = useState('');
+  const [eventType, setEventType]     = useState('');
+  const [venue, setVenue]             = useState('');
+
   const [items, setItems] = useState([
-    { id: 1, description: 'Event Management Services', quantity: 1, rate: 50000 },
-    { id: 2, description: 'Venue Decoration', quantity: 1, rate: 35000 }
+    { id: 1, description: 'Event Management Services', details: 'Full end-to-end event coordination and management', quantity: 1, rate: 50000 },
+    { id: 2, description: 'Venue Decoration',           details: 'Floral, lighting & thematic décor setup',           quantity: 1, rate: 35000 },
   ]);
-  
-  const [taxRate, setTaxRate] = useState(18); // default GST
+
+  const [taxRate,  setTaxRate]  = useState(18);
   const [discount, setDiscount] = useState(0);
-  const [notes, setNotes] = useState('50% advance payment required for confirmation.\nValidity of this quotation is 15 days.');
-  
+  const [notes, setNotes] = useState(
+    '1. 50% advance payment required to confirm the booking.\n2. Balance payment due 7 days before the event.\n3. This quotation is valid for 15 days from the date of issue.\n4. Cancellation charges may apply as per the agreement.'
+  );
+
   const previewRef = useRef(null);
 
-  const handleAddItem = () => {
-    const newItem = {
-      id: Date.now(),
-      description: '',
-      quantity: 1,
-      rate: 0
-    };
-    setItems([...items, newItem]);
-  };
+  const handleAddItem    = () => setItems(prev => [...prev, { id: Date.now(), description: '', details: '', quantity: 1, rate: 0 }]);
+  const handleRemoveItem = id  => setItems(prev => prev.filter(i => i.id !== id));
+  const handleItemChange = (id, field, value) => setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i));
 
-  const handleRemoveItem = (id) => {
-    setItems(items.filter(item => item.id !== id));
-  };
-
-  const handleItemChange = (id, field, value) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
-  };
-
-  const subtotal = items.reduce((acc, item) => acc + (item.quantity * item.rate), 0);
-  const taxAmount = (subtotal * taxRate) / 100;
-  const total = subtotal + taxAmount - discount;
+  const subtotal  = items.reduce((acc, i) => acc + i.quantity * i.rate, 0);
+  const taxAmount = Math.round((subtotal * taxRate) / 100);
+  const total     = subtotal + taxAmount - discount;
 
   const downloadPDF = async () => {
     if (!previewRef.current) return;
-    
     try {
-      // Create a canvas from the preview container
       const canvas = await html2canvas(previewRef.current, {
-        scale: 2, // Higher resolution
+        scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
       });
-      
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      
-      // Calculate PDF dimensions (A4 size: 210 x 297 mm)
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Quotation_${clientName.replace(/\s+/g, '_') || 'AtithiEvents'}.pdf`);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
+      const imgData  = canvas.toDataURL('image/jpeg', 1.0);
+      const pdf      = new jsPDF('p', 'mm', 'a4');
+      const pdfW     = pdf.internal.pageSize.getWidth();
+      const pdfH     = (canvas.height * pdfW) / canvas.width;
+
+      // If content fits on one page, add directly; otherwise jsPDF will clip — handle multi-page
+      const pageH = pdf.internal.pageSize.getHeight();
+      if (pdfH <= pageH) {
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+      } else {
+        // Split into pages
+        let yPos = 0;
+        while (yPos < pdfH) {
+          if (yPos > 0) pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, -yPos, pdfW, pdfH);
+          yPos += pageH;
+        }
+      }
+      pdf.save(`Quotation_${clientName.replace(/\s+/g, '_') || 'AtithiEvents'}_${Date.now()}.pdf`);
+    } catch (err) {
+      console.error('PDF error:', err);
+      alert('Failed to generate PDF. Please try again.');
     }
   };
 
+  /* ─── helpers ─── */
+  const fmt = n => '₹ ' + Number(n).toLocaleString('en-IN');
+  const quoteNo = `QT-${String(Date.now()).slice(-6)}`;
+  const today   = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  /* ─── shared input style ─── */
+  const inp = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.25)', color: '#fff', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' };
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', alignItems: 'start' }}>
-      
-      {/* LEFT PANEL: Editor */}
-      <div className="glass" style={{ padding: '24px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '80vh', overflowY: 'auto' }}>
-        <h2 style={{ color: '#fff', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-          <FileText color="#d4af37" />
-          Quotation Details
+    <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', minHeight: 0 }}>
+
+      {/* ══════════ LEFT: EDITOR ══════════ */}
+      <div className="glass" style={{ flex: '0 0 420px', padding: '24px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '18px', maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+        <h2 style={{ color: '#fff', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+          <FileText color="#d4af37" size={20} /> Quotation Details
         </h2>
-        
-        {/* Client Details */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.875rem', marginBottom: '4px' }}>Client Name</label>
-            <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="e.g. Rahul Sharma" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.875rem', marginBottom: '4px' }}>Phone</label>
-            <input type="text" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="e.g. +91 9876543210" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.875rem', marginBottom: '4px' }}>Event Type</label>
-            <input type="text" value={eventType} onChange={(e) => setEventType(e.target.value)} placeholder="e.g. Wedding Reception" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.875rem', marginBottom: '4px' }}>Event Date</label>
-            <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} />
-          </div>
+
+        {/* Client */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {[
+            ['Client Name', clientName, setClientName, 'e.g. Rahul Sharma', 'text'],
+            ['Phone',       clientPhone, setClientPhone, '+91 98765 43210', 'tel'],
+            ['Event Type',  eventType,  setEventType,  'e.g. Wedding Reception', 'text'],
+            ['Event Date',  eventDate,  setEventDate,  '', 'date'],
+          ].map(([label, val, setter, ph, type]) => (
+            <div key={label}>
+              <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.78rem', marginBottom: '4px' }}>{label}</label>
+              <input type={type} value={val} onChange={e => setter(e.target.value)} placeholder={ph} style={inp} />
+            </div>
+          ))}
           <div style={{ gridColumn: 'span 2' }}>
-            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.875rem', marginBottom: '4px' }}>Venue</label>
-            <input type="text" value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Taj Palace, Mumbai" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} />
+            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.78rem', marginBottom: '4px' }}>Venue</label>
+            <input type="text" value={venue} onChange={e => setVenue(e.target.value)} placeholder="e.g. Taj Palace, Mumbai" style={inp} />
           </div>
         </div>
 
         <hr style={{ borderColor: 'rgba(255,255,255,0.1)', margin: 0 }} />
 
-        {/* Items */}
+        {/* Line items */}
         <div>
-          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '12px' }}>Line Items</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {items.map((item) => (
-              <div key={item.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input 
-                  type="text" 
-                  value={item.description} 
-                  onChange={(e) => handleItemChange(item.id, 'description', e.target.value)} 
-                  placeholder="Item description" 
-                  style={{ flex: 2, minWidth: '100px', padding: '8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} 
-                />
-                <input 
-                  type="number" 
-                  value={item.quantity} 
-                  onChange={(e) => handleItemChange(item.id, 'quantity', Number(e.target.value))} 
-                  placeholder="Qty" 
-                  style={{ width: '60px', padding: '8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} 
-                />
-                <input 
-                  type="number" 
-                  value={item.rate} 
-                  onChange={(e) => handleItemChange(item.id, 'rate', Number(e.target.value))} 
-                  placeholder="Rate" 
-                  style={{ width: '90px', padding: '8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} 
-                />
-                <button onClick={() => handleRemoveItem(item.id)} style={{ padding: '8px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                  <Trash2 size={16} />
-                </button>
+          <h3 style={{ color: '#fff', fontSize: '0.95rem', margin: '0 0 12px 0' }}>Line Items</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {items.map(item => (
+              <div key={item.id} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <input type="text" value={item.description} onChange={e => handleItemChange(item.id, 'description', e.target.value)} placeholder="Item name" style={{ ...inp, flex: 1 }} />
+                  <button onClick={() => handleRemoveItem(item.id)} style={{ padding: '8px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', borderRadius: '6px', cursor: 'pointer', flexShrink: 0 }}>
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+                <textarea value={item.details} onChange={e => handleItemChange(item.id, 'details', e.target.value)} placeholder="Description / details (optional)" rows={2}
+                  style={{ ...inp, resize: 'vertical', marginBottom: '8px' }} />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.75rem', marginBottom: '3px' }}>Qty</label>
+                    <input type="number" value={item.quantity} onChange={e => handleItemChange(item.id, 'quantity', Number(e.target.value))} style={inp} />
+                  </div>
+                  <div style={{ flex: 2 }}>
+                    <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.75rem', marginBottom: '3px' }}>Rate (₹)</label>
+                    <input type="number" value={item.rate} onChange={e => handleItemChange(item.id, 'rate', Number(e.target.value))} style={inp} />
+                  </div>
+                  <div style={{ flex: 2 }}>
+                    <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.75rem', marginBottom: '3px' }}>Amount</label>
+                    <div style={{ ...inp, color: '#d4af37', fontWeight: 600 }}>{fmt(item.quantity * item.rate)}</div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-          <button onClick={handleAddItem} style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', color: '#fff', padding: '8px 16px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer' }}>
-            <Plus size={16} /> Add Item
+          <button onClick={handleAddItem} style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(212,175,55,0.1)', color: '#d4af37', padding: '8px 16px', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.88rem' }}>
+            <Plus size={15} /> Add Item
           </button>
         </div>
 
         <hr style={{ borderColor: 'rgba(255,255,255,0.1)', margin: 0 }} />
 
-        {/* Totals & Notes */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        {/* Tax / discount / notes */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.875rem', marginBottom: '4px' }}>Tax Rate (%)</label>
-            <input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} />
+            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.78rem', marginBottom: '4px' }}>GST / Tax Rate (%)</label>
+            <input type="number" value={taxRate} onChange={e => setTaxRate(Number(e.target.value))} style={inp} />
           </div>
           <div>
-            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.875rem', marginBottom: '4px' }}>Discount (₹)</label>
-            <input type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} />
+            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.78rem', marginBottom: '4px' }}>Discount (₹)</label>
+            <input type="number" value={discount} onChange={e => setDiscount(Number(e.target.value))} style={inp} />
           </div>
           <div style={{ gridColumn: 'span 2' }}>
-            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.875rem', marginBottom: '4px' }}>Terms & Notes</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff' }} />
+            <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.78rem', marginBottom: '4px' }}>Terms & Conditions</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={4} style={{ ...inp, resize: 'vertical' }} />
           </div>
         </div>
 
-      </div>
+        {/* Totals summary */}
+        <div style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '8px', padding: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: '0.85rem', marginBottom: '6px' }}><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: '0.85rem', marginBottom: '6px' }}><span>GST ({taxRate}%)</span><span>{fmt(taxAmount)}</span></div>
+          {discount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ef4444', fontSize: '0.85rem', marginBottom: '6px' }}><span>Discount</span><span>− {fmt(discount)}</span></div>}
+          <hr style={{ borderColor: 'rgba(212,175,55,0.3)', margin: '8px 0' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#d4af37', fontSize: '1rem', fontWeight: 700 }}><span>Total</span><span>{fmt(total)}</span></div>
+        </div>
 
-
-      {/* RIGHT PANEL: Preview & Download */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <button 
-          onClick={downloadPDF}
-          style={{ 
-            display: 'flex', alignItems: 'center', justifySelf: 'start', gap: '8px', 
-            background: 'var(--accent-gold)', color: '#000', padding: '12px 24px', 
-            borderRadius: '8px', border: 'none', fontWeight: 600, cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)', width: 'fit-content'
-          }}
-        >
+        <button onClick={downloadPDF} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'var(--accent-gold)', color: '#000', padding: '13px', borderRadius: '8px', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '1rem', boxShadow: '0 4px 14px rgba(212,175,55,0.35)' }}>
           <Download size={20} /> Download PDF
         </button>
+      </div>
 
-        {/* Actual A4 container to be captured */}
-        <div style={{ background: '#fff', borderRadius: '8px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.2)' }}>
-          <div 
+      {/* ══════════ RIGHT: LIVE PDF PREVIEW ══════════ */}
+      <div style={{ flex: 1, overflowX: 'auto', maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+        <div style={{ background: '#e5e7eb', padding: '16px', borderRadius: '8px', display: 'inline-block', minWidth: '210mm' }}>
+          {/* ── PDF CANVAS ── */}
+          <div
             ref={previewRef}
             style={{
               width: '210mm',
               minHeight: '297mm',
-              padding: '40px',
               background: '#ffffff',
-              color: '#333333',
-              fontFamily: 'Arial, sans-serif',
-              boxSizing: 'border-box'
+              fontFamily: '"Helvetica Neue", Arial, sans-serif',
+              color: '#1a1a1a',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #d4af37', paddingBottom: '20px', marginBottom: '30px' }}>
-              <div>
-                <h1 style={{ fontSize: '28px', margin: '0 0 5px 0', color: '#1a1a1a', letterSpacing: '1px' }}>ATITHI EVENTS</h1>
-                <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>Making your moments magical</p>
-                <div style={{ marginTop: '15px', fontSize: '13px', color: '#444' }}>
-                  <p style={{ margin: '2px 0' }}>Mumbai, Maharashtra, India</p>
-                  <p style={{ margin: '2px 0' }}>+91 99999 99999</p>
-                  <p style={{ margin: '2px 0' }}>contact@atithievents.in</p>
+            {/* ── HEADER BAND ── */}
+            <div style={{ background: '#1a1a1a', padding: '24px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <img src={FIRM.logo} alt="Atithi Events" style={{ height: '60px', width: '60px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #d4af37' }} />
+                <div>
+                  <div style={{ fontSize: '22px', fontWeight: 800, color: '#d4af37', letterSpacing: '2px' }}>{FIRM.name}</div>
+                  <div style={{ fontSize: '11px', color: '#999', letterSpacing: '1px', marginTop: '2px' }}>{FIRM.tagline.toUpperCase()}</div>
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <h2 style={{ fontSize: '24px', margin: '0 0 10px 0', color: '#d4af37', fontWeight: 'normal' }}>QUOTATION</h2>
-                <table style={{ fontSize: '13px', marginLeft: 'auto' }}>
+                <div style={{ fontSize: '28px', fontWeight: 300, color: '#ffffff', letterSpacing: '4px' }}>QUOTATION</div>
+                <div style={{ fontSize: '12px', color: '#d4af37', marginTop: '4px' }}>#{quoteNo}</div>
+                <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>Date: {today}</div>
+              </div>
+            </div>
+
+            {/* ── GOLD DIVIDER ── */}
+            <div style={{ height: '3px', background: 'linear-gradient(90deg, #d4af37, #f5e27a, #d4af37)' }} />
+
+            {/* ── BODY ── */}
+            <div style={{ padding: '32px 36px', flex: 1, display: 'flex', flexDirection: 'column', gap: '28px' }}>
+
+              {/* Firm & Client info row */}
+              <div style={{ display: 'flex', gap: '24px' }}>
+                {/* From */}
+                <div style={{ flex: 1, background: '#f9f9f9', borderRadius: '8px', padding: '16px 20px', borderLeft: '4px solid #d4af37' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#d4af37', letterSpacing: '1.5px', marginBottom: '10px' }}>FROM</div>
+                  <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '6px' }}>{FIRM.name}</div>
+                  <div style={{ fontSize: '12px', color: '#555', lineHeight: '1.8' }}>
+                    <div>{FIRM.address}</div>
+                    <div>📞 {FIRM.phone}</div>
+                    <div>✉ {FIRM.email}</div>
+                    <div>🌐 {FIRM.website}</div>
+                  </div>
+                </div>
+                {/* To */}
+                <div style={{ flex: 1, background: '#f9f9f9', borderRadius: '8px', padding: '16px 20px', borderLeft: '4px solid #1a1a1a' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#1a1a1a', letterSpacing: '1.5px', marginBottom: '10px' }}>QUOTATION FOR</div>
+                  <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '6px' }}>{clientName || 'Client Name'}</div>
+                  <div style={{ fontSize: '12px', color: '#555', lineHeight: '1.8' }}>
+                    {clientPhone && <div>📞 {clientPhone}</div>}
+                    {eventType && <div>🎉 {eventType}</div>}
+                    {eventDate && <div>📅 {eventDate}</div>}
+                    {venue && <div>📍 {venue}</div>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Items table */}
+              <div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ background: '#1a1a1a' }}>
+                      {['#', 'Description', 'Qty', 'Rate (₹)', 'Amount (₹)'].map((h, i) => (
+                        <th key={h} style={{ padding: '12px 14px', textAlign: i === 0 ? 'center' : i >= 2 ? 'right' : 'left', color: '#d4af37', fontWeight: 600, fontSize: '11px', letterSpacing: '0.8px', width: i === 0 ? '32px' : i >= 2 ? '90px' : 'auto' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((item, idx) => (
+                      <tr key={item.id} style={{ borderBottom: '1px solid #f0f0f0', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
+                        <td style={{ padding: '14px', textAlign: 'center', color: '#888', fontSize: '12px' }}>{idx + 1}</td>
+                        <td style={{ padding: '14px' }}>
+                          <div style={{ fontWeight: 600, marginBottom: item.details ? '4px' : 0 }}>{item.description || '—'}</div>
+                          {item.details && <div style={{ fontSize: '11px', color: '#777', lineHeight: '1.5' }}>{item.details}</div>}
+                        </td>
+                        <td style={{ padding: '14px', textAlign: 'right' }}>{item.quantity}</td>
+                        <td style={{ padding: '14px', textAlign: 'right' }}>{Number(item.rate).toLocaleString('en-IN')}</td>
+                        <td style={{ padding: '14px', textAlign: 'right', fontWeight: 600 }}>{(item.quantity * item.rate).toLocaleString('en-IN')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Totals */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <table style={{ width: '280px', fontSize: '13px' }}>
                   <tbody>
                     <tr>
-                      <td style={{ padding: '2px 10px 2px 0', color: '#666' }}>Date:</td>
-                      <td style={{ fontWeight: 'bold' }}>{new Date().toLocaleDateString()}</td>
+                      <td style={{ padding: '7px 12px', color: '#555' }}>Subtotal</td>
+                      <td style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 600 }}>{fmt(subtotal)}</td>
                     </tr>
-                    <tr>
-                      <td style={{ padding: '2px 10px 2px 0', color: '#666' }}>Quote #:</td>
-                      <td style={{ fontWeight: 'bold' }}>QT-{new Date().getTime().toString().slice(-6)}</td>
+                    {taxRate > 0 && (
+                      <tr>
+                        <td style={{ padding: '7px 12px', color: '#555' }}>GST ({taxRate}%)</td>
+                        <td style={{ padding: '7px 12px', textAlign: 'right' }}>{fmt(taxAmount)}</td>
+                      </tr>
+                    )}
+                    {discount > 0 && (
+                      <tr>
+                        <td style={{ padding: '7px 12px', color: '#ef4444' }}>Discount</td>
+                        <td style={{ padding: '7px 12px', textAlign: 'right', color: '#ef4444' }}>− {fmt(discount)}</td>
+                      </tr>
+                    )}
+                    <tr style={{ background: '#1a1a1a', borderRadius: '6px' }}>
+                      <td style={{ padding: '12px 14px', fontWeight: 700, color: '#fff', fontSize: '14px' }}>TOTAL AMOUNT</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: '#d4af37', fontSize: '15px' }}>{fmt(total)}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-            </div>
 
-            {/* Client Info */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '14px', color: '#d4af37', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Quotation For:</h3>
-                <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', fontSize: '15px' }}>{clientName || 'Client Name'}</p>
-                {clientPhone && <p style={{ margin: '0 0 4px 0', fontSize: '13px' }}>{clientPhone}</p>}
+              {/* Terms */}
+              <div style={{ background: '#fffbf0', border: '1px solid #f0d882', borderRadius: '8px', padding: '18px 22px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#b8860b', letterSpacing: '1px', marginBottom: '10px' }}>TERMS & CONDITIONS</div>
+                <div style={{ fontSize: '12px', color: '#555', lineHeight: '1.9', whiteSpace: 'pre-line' }}>{notes}</div>
               </div>
-              <div style={{ flex: 1, textAlign: 'right' }}>
-                <h3 style={{ fontSize: '14px', color: '#d4af37', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Event Details:</h3>
-                {eventType && <p style={{ margin: '0 0 4px 0', fontSize: '13px' }}><strong>Event:</strong> {eventType}</p>}
-                {eventDate && <p style={{ margin: '0 0 4px 0', fontSize: '13px' }}><strong>Date:</strong> {eventDate}</p>}
-                {venue && <p style={{ margin: '0 0 4px 0', fontSize: '13px' }}><strong>Venue:</strong> {venue}</p>}
+
+            </div>
+
+            {/* ── FOOTER ── */}
+            <div style={{ background: '#1a1a1a', padding: '14px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '11px', color: '#888' }}>
+                This is a computer-generated quotation — no physical signature required.
               </div>
-            </div>
-
-            {/* Items Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px', fontSize: '14px' }}>
-              <thead>
-                <tr style={{ background: '#f8f8f8', borderBottom: '2px solid #333' }}>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Description</th>
-                  <th style={{ padding: '12px', textAlign: 'center', width: '80px' }}>Qty</th>
-                  <th style={{ padding: '12px', textAlign: 'right', width: '120px' }}>Rate (₹)</th>
-                  <th style={{ padding: '12px', textAlign: 'right', width: '120px' }}>Amount (₹)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '12px' }}>{item.description || '-'}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>{item.quantity}</td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>{item.rate.toLocaleString('en-IN')}</td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>{(item.quantity * item.rate).toLocaleString('en-IN')}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Totals */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
-              <table style={{ width: '300px', fontSize: '14px' }}>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: '8px', color: '#666' }}>Subtotal:</td>
-                    <td style={{ padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>₹ {subtotal.toLocaleString('en-IN')}</td>
-                  </tr>
-                  {taxRate > 0 && (
-                    <tr>
-                      <td style={{ padding: '8px', color: '#666' }}>Tax ({taxRate}%):</td>
-                      <td style={{ padding: '8px', textAlign: 'right' }}>₹ {taxAmount.toLocaleString('en-IN')}</td>
-                    </tr>
-                  )}
-                  {discount > 0 && (
-                    <tr>
-                      <td style={{ padding: '8px', color: '#666' }}>Discount:</td>
-                      <td style={{ padding: '8px', textAlign: 'right', color: '#ef4444' }}>- ₹ {discount.toLocaleString('en-IN')}</td>
-                    </tr>
-                  )}
-                  <tr style={{ borderTop: '2px solid #333' }}>
-                    <td style={{ padding: '12px 8px', fontWeight: 'bold', fontSize: '16px' }}>Total Amount:</td>
-                    <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '16px', color: '#d4af37' }}>
-                      ₹ {total.toLocaleString('en-IN')}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Notes */}
-            <div style={{ marginTop: 'auto', padding: '20px', background: '#f8f8f8', borderRadius: '4px', borderLeft: '4px solid #d4af37' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333' }}>Terms & Conditions</h4>
-              <p style={{ margin: 0, fontSize: '12px', color: '#666', whiteSpace: 'pre-line' }}>{notes}</p>
-            </div>
-            
-            {/* Footer */}
-            <div style={{ textAlign: 'center', marginTop: '40px', fontSize: '11px', color: '#999', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-              This is a computer generated quotation and does not require a physical signature.
+              <div style={{ fontSize: '11px', color: '#d4af37', textAlign: 'right' }}>
+                {FIRM.name} · {FIRM.phone}
+              </div>
             </div>
 
           </div>
+          {/* end PDF canvas */}
         </div>
       </div>
+
     </div>
   );
 }
