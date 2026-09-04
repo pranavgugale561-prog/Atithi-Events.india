@@ -33,7 +33,7 @@ export default function Footer() {
           Atithi Events
         </h3>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.6, maxWidth: 400, margin: '0 auto 24px' }}>
-          Where Plans Align & Movements Define. <br />
+          Where Plans Align & Moments Define. <br />
           Crafting your main character moments.
         </p>
         

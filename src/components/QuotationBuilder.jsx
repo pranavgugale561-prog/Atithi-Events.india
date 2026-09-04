@@ -274,7 +274,7 @@ export default function QuotationBuilder() {
                 <thead>
                   <tr style={{ background: '#1a1a1a' }}>
                     {['#', 'Description', 'Qty', 'Rate (₹)', 'Amount (₹)'].map((h, i) => (
-                      <th key={h} style={{ padding: '12px 14px', textAlign: i === 0 ? 'center' : i >= 2 ? 'right' : 'left', color: '#d4af37', fontWeight: 600, fontSize: '11px', letterSpacing: '0.8px', width: i === 0 ? '32px' : i >= 2 ? '90px' : 'auto' }}>{h}</th>
+                      <th key={h} style={{ padding: '12px 14px', textAlign: i === 0 ? 'center' : i >= 2 ? 'right' : 'left', color: '#d4af37', fontWeight: 600, fontSize: '11px', letterSpacing: '0.8px', whiteSpace: 'nowrap', width: i === 0 ? '32px' : i === 2 ? '60px' : i > 2 ? '110px' : 'auto' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -286,9 +286,9 @@ export default function QuotationBuilder() {
                         <div style={{ fontWeight: 600, marginBottom: item.details ? '4px' : 0 }}>{item.description || '—'}</div>
                         {item.details && <div style={{ fontSize: '11px', color: '#777', lineHeight: '1.5' }}>{item.details}</div>}
                       </td>
-                      <td style={{ padding: '14px', textAlign: 'right' }}>{item.quantity}</td>
-                      <td style={{ padding: '14px', textAlign: 'right' }}>{Number(item.rate).toLocaleString('en-IN')}</td>
-                      <td style={{ padding: '14px', textAlign: 'right', fontWeight: 600 }}>{(item.quantity * item.rate).toLocaleString('en-IN')}</td>
+                      <td style={{ padding: '14px', textAlign: 'right', whiteSpace: 'nowrap' }}>{item.quantity}</td>
+                      <td style={{ padding: '14px', textAlign: 'right', whiteSpace: 'nowrap' }}>{Number(item.rate).toLocaleString('en-IN')}</td>
+                      <td style={{ padding: '14px', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>{(item.quantity * item.rate).toLocaleString('en-IN')}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -298,12 +298,12 @@ export default function QuotationBuilder() {
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <table style={{ width: '280px', fontSize: '13px' }}>
                   <tbody>
-                    <tr><td style={{ padding: '7px 12px', color: '#555' }}>Subtotal</td><td style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 600 }}>{fmt(subtotal)}</td></tr>
-                    {taxRate > 0 && <tr><td style={{ padding: '7px 12px', color: '#555' }}>GST ({taxRate}%)</td><td style={{ padding: '7px 12px', textAlign: 'right' }}>{fmt(taxAmount)}</td></tr>}
-                    {discount > 0 && <tr><td style={{ padding: '7px 12px', color: '#ef4444' }}>Discount</td><td style={{ padding: '7px 12px', textAlign: 'right', color: '#ef4444' }}>− {fmt(discount)}</td></tr>}
+                    <tr><td style={{ padding: '7px 12px', color: '#555' }}>Subtotal</td><td style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>{fmt(subtotal)}</td></tr>
+                    {taxRate > 0 && <tr><td style={{ padding: '7px 12px', color: '#555', whiteSpace: 'nowrap' }}>GST ({taxRate}%)</td><td style={{ padding: '7px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(taxAmount)}</td></tr>}
+                    {discount > 0 && <tr><td style={{ padding: '7px 12px', color: '#ef4444' }}>Discount</td><td style={{ padding: '7px 12px', textAlign: 'right', color: '#ef4444', whiteSpace: 'nowrap' }}>− {fmt(discount)}</td></tr>}
                     <tr style={{ background: '#1a1a1a' }}>
-                      <td style={{ padding: '12px 14px', fontWeight: 700, color: '#fff', fontSize: '14px' }}>{isInvoice ? 'AMOUNT DUE' : 'TOTAL AMOUNT'}</td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: '#d4af37', fontSize: '15px' }}>{fmt(total)}</td>
+                      <td style={{ padding: '12px 14px', fontWeight: 700, color: '#fff', fontSize: '14px', whiteSpace: 'nowrap' }}>{isInvoice ? 'AMOUNT DUE' : 'TOTAL AMOUNT'}</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: '#d4af37', fontSize: '15px', whiteSpace: 'nowrap' }}>{fmt(total)}</td>
                     </tr>
                   </tbody>
                 </table>
