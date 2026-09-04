@@ -11,7 +11,7 @@ const FIRM = {
   email: 'atithieventsservice@gmail.com',
   website: 'atithi-events-india-p2e8.vercel.app',
   logo: '/logo.png',
-  qr: '/upi-qr.png',
+  qr: '/upi-qr-clean.png',
   bank: {
     accNo: '0546766279',
     ifsc: 'KKBK0002035',
