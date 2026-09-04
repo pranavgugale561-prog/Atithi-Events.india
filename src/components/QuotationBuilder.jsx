@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Download, Plus, Trash2, FileText, Receipt } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -11,11 +11,17 @@ const FIRM = {
   email: 'atithieventsservice@gmail.com',
   website: 'atithi-events-india-p2e8.vercel.app',
   logo: '/logo.png',
+  qr: '/upi-qr.png',
+  bank: {
+    accNo: '0546766279',
+    ifsc: 'KKBK0002035',
+    branch: 'AHMADNAGAR',
+    upi: '8080531468@kotakbank'
+  }
 };
 
 export default function QuotationBuilder() {
-  /* ── document type toggle ── */
-  const [docType, setDocType] = useState('quotation'); // 'quotation' | 'invoice'
+  const [docType, setDocType] = useState('quotation');
   const isInvoice = docType === 'invoice';
 
   const [clientName,  setClientName]  = useState('');
@@ -23,8 +29,8 @@ export default function QuotationBuilder() {
   const [eventDate,   setEventDate]   = useState('');
   const [eventType,   setEventType]   = useState('');
   const [venue,       setVenue]       = useState('');
-  const [dueDate,     setDueDate]     = useState('');   // invoice only
-  const [payStatus,   setPayStatus]   = useState('Unpaid'); // invoice only
+  const [dueDate,     setDueDate]     = useState('');
+  const [payStatus,   setPayStatus]   = useState('Unpaid');
 
   const [items, setItems] = useState([
     { id: 1, description: 'Event Management Services', details: 'Full end-to-end event coordination and management', quantity: 1, rate: 50000 },
@@ -36,6 +42,11 @@ export default function QuotationBuilder() {
   const [notes, setNotes] = useState(
     '1. 50% advance payment required to confirm the booking.\n2. Balance payment due 7 days before the event.\n3. This quotation is valid for 15 days from the date of issue.\n4. Cancellation charges may apply as per the agreement.'
   );
+
+  const [baseUrl, setBaseUrl] = useState('');
+  useEffect(() => {
+    setBaseUrl(window.location.origin);
+  }, []);
 
   const previewRef = useRef(null);
 
@@ -50,7 +61,7 @@ export default function QuotationBuilder() {
   const downloadPDF = async () => {
     if (!previewRef.current) return;
     try {
-      const canvas  = await html2canvas(previewRef.current, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
+      const canvas  = await html2canvas(previewRef.current, { scale: 2, useCORS: true, allowTaint: true, logging: false, backgroundColor: '#ffffff' });
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf     = new jsPDF('p', 'mm', 'a4');
       const pdfW    = pdf.internal.pageSize.getWidth();
@@ -67,43 +78,30 @@ export default function QuotationBuilder() {
     } catch (err) { console.error(err); alert('Failed to generate PDF. Please try again.'); }
   };
 
-  /* helpers */
   const fmt     = n  => '₹ ' + Number(n).toLocaleString('en-IN');
   const refNo   = isInvoice ? `INV-${String(Date.now()).slice(-6)}` : `QT-${String(Date.now()).slice(-6)}`;
   const today   = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
   const inp     = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.25)', color: '#fff', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' };
 
-  /* invoice-specific badge colours */
   const statusColor = payStatus === 'Paid' ? '#22c55e' : payStatus === 'Partial' ? '#f59e0b' : '#ef4444';
 
   return (
     <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', minHeight: 0 }}>
-
       {/* ══════════ LEFT: EDITOR ══════════ */}
       <div className="glass" style={{ flex: '0 0 430px', padding: '24px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '18px', maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
-
-        {/* ── TYPE TOGGLE ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={{ color: '#fff', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
             {isInvoice ? <Receipt color="#d4af37" size={20} /> : <FileText color="#d4af37" size={20} />}
             {isInvoice ? 'Invoice Details' : 'Quotation Details'}
           </h2>
-
-          {/* Toggle pill */}
           <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '999px', padding: '3px', border: '1px solid rgba(255,255,255,0.1)', gap: '2px' }}>
             {['quotation', 'invoice'].map(t => (
               <button
                 key={t}
                 onClick={() => setDocType(t)}
                 style={{
-                  padding: '6px 14px',
-                  borderRadius: '999px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  transition: 'all 0.2s',
-                  background: docType === t ? (t === 'invoice' ? '#22c55e' : '#d4af37') : 'transparent',
+                  padding: '6px 14px', borderRadius: '999px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.2s',
+                  background: docType === t ? '#d4af37' : 'transparent',
                   color: docType === t ? '#000' : '#888',
                   textTransform: 'capitalize',
                 }}
@@ -112,7 +110,6 @@ export default function QuotationBuilder() {
           </div>
         </div>
 
-        {/* ── CLIENT FIELDS ── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {[
             ['Client Name', clientName, setClientName, 'e.g. Rahul Sharma', 'text'],
@@ -130,7 +127,6 @@ export default function QuotationBuilder() {
             <input type="text" value={venue} onChange={e => setVenue(e.target.value)} placeholder="e.g. Taj Palace, Mumbai" style={inp} />
           </div>
 
-          {/* Invoice-only fields */}
           {isInvoice && (
             <>
               <div>
@@ -151,7 +147,6 @@ export default function QuotationBuilder() {
 
         <hr style={{ borderColor: 'rgba(255,255,255,0.1)', margin: 0 }} />
 
-        {/* ── LINE ITEMS ── */}
         <div>
           <h3 style={{ color: '#fff', fontSize: '0.95rem', margin: '0 0 12px 0' }}>Line Items</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -188,7 +183,6 @@ export default function QuotationBuilder() {
 
         <hr style={{ borderColor: 'rgba(255,255,255,0.1)', margin: 0 }} />
 
-        {/* ── TAX / DISCOUNT / NOTES ── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
             <label style={{ display: 'block', color: '#a3a3a3', fontSize: '0.78rem', marginBottom: '4px' }}>GST / Tax Rate (%)</label>
@@ -204,7 +198,6 @@ export default function QuotationBuilder() {
           </div>
         </div>
 
-        {/* ── TOTALS SUMMARY ── */}
         <div style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '8px', padding: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: '0.85rem', marginBottom: '6px' }}><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: '0.85rem', marginBottom: '6px' }}><span>GST ({taxRate}%)</span><span>{fmt(taxAmount)}</span></div>
@@ -213,7 +206,7 @@ export default function QuotationBuilder() {
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#d4af37', fontSize: '1rem', fontWeight: 700 }}><span>Total</span><span>{fmt(total)}</span></div>
         </div>
 
-        <button onClick={downloadPDF} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: isInvoice ? '#22c55e' : 'var(--accent-gold)', color: '#000', padding: '13px', borderRadius: '8px', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '1rem', boxShadow: `0 4px 14px ${isInvoice ? 'rgba(34,197,94,0.35)' : 'rgba(212,175,55,0.35)'}` }}>
+        <button onClick={downloadPDF} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'var(--accent-gold)', color: '#000', padding: '13px', borderRadius: '8px', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '1rem', boxShadow: '0 4px 14px rgba(212,175,55,0.35)' }}>
           <Download size={20} /> Download {isInvoice ? 'Invoice' : 'Quotation'} PDF
         </button>
       </div>
@@ -228,7 +221,7 @@ export default function QuotationBuilder() {
             {/* ── HEADER ── */}
             <div style={{ background: '#1a1a1a', padding: '24px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <img src={FIRM.logo} alt="Atithi Events" style={{ height: '60px', width: '60px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #d4af37' }} />
+                {baseUrl && <img src={`${baseUrl}${FIRM.logo}`} crossOrigin="anonymous" alt="Atithi Events" style={{ height: '60px', width: '60px', objectFit: 'contain', borderRadius: '8px', border: '2px solid #d4af37', background: '#000' }} />}
                 <div>
                   <div style={{ fontSize: '22px', fontWeight: 800, color: '#d4af37', letterSpacing: '2px' }}>{FIRM.name}</div>
                   <div style={{ fontSize: '11px', color: '#999', letterSpacing: '1px', marginTop: '2px' }}>{FIRM.tagline.toUpperCase()}</div>
@@ -236,7 +229,7 @@ export default function QuotationBuilder() {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '28px', fontWeight: 300, color: '#ffffff', letterSpacing: '4px' }}>{isInvoice ? 'INVOICE' : 'QUOTATION'}</div>
-                <div style={{ fontSize: '12px', color: isInvoice ? '#22c55e' : '#d4af37', marginTop: '4px' }}>#{refNo}</div>
+                <div style={{ fontSize: '12px', color: '#d4af37', marginTop: '4px' }}>#{refNo}</div>
                 <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>Date: {today}</div>
                 {isInvoice && dueDate && <div style={{ fontSize: '11px', color: '#f87171', marginTop: '2px' }}>Due: {dueDate}</div>}
                 {isInvoice && (
@@ -247,16 +240,15 @@ export default function QuotationBuilder() {
               </div>
             </div>
 
-            {/* ── GOLD DIVIDER ── */}
-            <div style={{ height: '3px', background: isInvoice ? 'linear-gradient(90deg,#22c55e,#86efac,#22c55e)' : 'linear-gradient(90deg,#d4af37,#f5e27a,#d4af37)' }} />
+            <div style={{ height: '3px', background: 'linear-gradient(90deg, #d4af37, #f5e27a, #d4af37)' }} />
 
             {/* ── BODY ── */}
             <div style={{ padding: '32px 36px', flex: 1, display: 'flex', flexDirection: 'column', gap: '28px' }}>
 
               {/* FROM / TO */}
               <div style={{ display: 'flex', gap: '24px' }}>
-                <div style={{ flex: 1, background: '#f9f9f9', borderRadius: '8px', padding: '16px 20px', borderLeft: `4px solid ${isInvoice ? '#22c55e' : '#d4af37'}` }}>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: isInvoice ? '#22c55e' : '#d4af37', letterSpacing: '1.5px', marginBottom: '10px' }}>FROM</div>
+                <div style={{ flex: 1, background: '#f9f9f9', borderRadius: '8px', padding: '16px 20px', borderLeft: '4px solid #d4af37' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#d4af37', letterSpacing: '1.5px', marginBottom: '10px' }}>FROM</div>
                   <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '6px' }}>{FIRM.name}</div>
                   <div style={{ fontSize: '12px', color: '#555', lineHeight: '1.9' }}>
                     <div>{FIRM.address}</div>
@@ -282,7 +274,7 @@ export default function QuotationBuilder() {
                 <thead>
                   <tr style={{ background: '#1a1a1a' }}>
                     {['#', 'Description', 'Qty', 'Rate (₹)', 'Amount (₹)'].map((h, i) => (
-                      <th key={h} style={{ padding: '12px 14px', textAlign: i === 0 ? 'center' : i >= 2 ? 'right' : 'left', color: isInvoice ? '#86efac' : '#d4af37', fontWeight: 600, fontSize: '11px', letterSpacing: '0.8px', width: i === 0 ? '32px' : i >= 2 ? '90px' : 'auto' }}>{h}</th>
+                      <th key={h} style={{ padding: '12px 14px', textAlign: i === 0 ? 'center' : i >= 2 ? 'right' : 'left', color: '#d4af37', fontWeight: 600, fontSize: '11px', letterSpacing: '0.8px', width: i === 0 ? '32px' : i >= 2 ? '90px' : 'auto' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -311,17 +303,33 @@ export default function QuotationBuilder() {
                     {discount > 0 && <tr><td style={{ padding: '7px 12px', color: '#ef4444' }}>Discount</td><td style={{ padding: '7px 12px', textAlign: 'right', color: '#ef4444' }}>− {fmt(discount)}</td></tr>}
                     <tr style={{ background: '#1a1a1a' }}>
                       <td style={{ padding: '12px 14px', fontWeight: 700, color: '#fff', fontSize: '14px' }}>{isInvoice ? 'AMOUNT DUE' : 'TOTAL AMOUNT'}</td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: isInvoice ? '#86efac' : '#d4af37', fontSize: '15px' }}>{fmt(total)}</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: '#d4af37', fontSize: '15px' }}>{fmt(total)}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              {/* TERMS */}
-              <div style={{ background: isInvoice ? '#f0fdf4' : '#fffbf0', border: `1px solid ${isInvoice ? '#86efac' : '#f0d882'}`, borderRadius: '8px', padding: '18px 22px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: isInvoice ? '#16a34a' : '#b8860b', letterSpacing: '1px', marginBottom: '10px' }}>TERMS & CONDITIONS</div>
-                <div style={{ fontSize: '12px', color: '#555', lineHeight: '1.9', whiteSpace: 'pre-line' }}>{notes}</div>
+              {/* T&C + BANK DETAILS (HORIZONTAL) */}
+              <div style={{ display: 'flex', gap: '24px', marginTop: 'auto' }}>
+                <div style={{ flex: 1.5, background: '#fffbf0', border: '1px solid #f0d882', borderRadius: '8px', padding: '18px 22px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#b8860b', letterSpacing: '1px', marginBottom: '10px' }}>TERMS & CONDITIONS</div>
+                  <div style={{ fontSize: '12px', color: '#555', lineHeight: '1.9', whiteSpace: 'pre-line' }}>{notes}</div>
+                </div>
+
+                <div style={{ flex: 1, background: '#f9f9f9', border: '1px solid #eee', borderRadius: '8px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#1a1a1a', letterSpacing: '1px', marginBottom: '8px' }}>BANK DETAILS</div>
+                    <div style={{ fontSize: '11px', color: '#555', lineHeight: '1.8' }}>
+                      <div><span style={{ fontWeight: 600 }}>A/c No:</span> {FIRM.bank.accNo}</div>
+                      <div><span style={{ fontWeight: 600 }}>IFSC:</span> {FIRM.bank.ifsc}</div>
+                      <div><span style={{ fontWeight: 600 }}>Branch:</span> {FIRM.bank.branch}</div>
+                      <div><span style={{ fontWeight: 600 }}>UPI ID:</span> {FIRM.bank.upi}</div>
+                    </div>
+                  </div>
+                  {baseUrl && <img src={`${baseUrl}${FIRM.qr}`} crossOrigin="anonymous" alt="UPI QR Code" style={{ width: '85px', height: '85px', objectFit: 'contain', borderRadius: '6px', border: '1px solid #ddd', padding: '4px', background: '#fff' }} />}
+                </div>
               </div>
+
             </div>
 
             {/* ── FOOTER ── */}
@@ -329,7 +337,7 @@ export default function QuotationBuilder() {
               <div style={{ fontSize: '11px', color: '#888' }}>
                 This is a computer-generated {isInvoice ? 'invoice' : 'quotation'} — no physical signature required.
               </div>
-              <div style={{ fontSize: '11px', color: isInvoice ? '#86efac' : '#d4af37', textAlign: 'right' }}>
+              <div style={{ fontSize: '11px', color: '#d4af37', textAlign: 'right' }}>
                 {FIRM.name} · {FIRM.phone}
               </div>
             </div>
